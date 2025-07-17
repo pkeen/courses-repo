@@ -57,10 +57,6 @@ export interface CourseCRUD
 // 	findUsage: (id: number) => Promise<LessonUsage>;
 // }
 
-// export interface VideoCRUD
-// 	extends CRUDOperations<VideoDTO, CreateVideoDTO, EditVideoDTO, VideoDTO> {
-// 	// findUsage: (id: number) => Promise<VideoUsage>;
-// }
 
 export interface ContentItemCRUD
 	extends CRUDOperations<

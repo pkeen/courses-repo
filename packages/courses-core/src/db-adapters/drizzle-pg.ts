@@ -1,9 +1,5 @@
 import { ContentItemCRUD, CourseCRUD } from "../types";
-import {
-	createSchema,
-	DrizzleDbWithSchema,
-	DefaultSchema,
-} from "./schema";
+import { createSchema, DrizzleDbWithSchema, DefaultSchema } from "./schema";
 import {
 	contentItemDTO,
 	ContentItemDTO,
@@ -15,6 +11,7 @@ import {
 	CourseTreeItem,
 	CourseTreeItemUpsert,
 	CreateCourseTreeDTO,
+	CreateFullContentItem,
 	EditCourseTreeDTO,
 	fullContentItem,
 	FullContentItem,
@@ -426,6 +423,41 @@ const createCRUD = (
 				.where(eq(schema.contentItem.id, id));
 		};
 
+		const create = async (data: CreateFullContentItem) => {
+			const base = {
+				title: data.title,
+				type: data.type,
+				isPublished: data.isPublished,
+				createdAt: new Date(),
+				updatedAt: new Date(),
+			};
+
+			// update main contentItem
+			const [newContentItem] = await db
+				.insert(schema.contentItem)
+				.values(base)
+				.returning();
+
+			// spread details and add contentItem Id
+			const detail = { ...data.details, contentId: newContentItem.id };
+
+			switch (detail.type) {
+				case "lesson": {
+					await db.insert(schema.lessonDetail).values(detail);
+				}
+				case "video": {
+					await db.insert(schema.videoDetail).values(detail);
+				}
+				case "file": {
+					await db.insert(schema.fileDetail).values(detail);
+				}
+				case "quiz": {
+					// TODO
+					console.error("not supported yet");
+				}
+			}
+		};
+
 		const update = async (data: FullContentItem) => {
 			const base = {
 				id: data.id,
@@ -469,6 +501,7 @@ const createCRUD = (
 			get,
 			destroy,
 			update,
+			create,
 		};
 	};
 

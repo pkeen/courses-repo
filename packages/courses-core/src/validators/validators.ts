@@ -142,10 +142,9 @@ export const lessonDetail = z.object({
 	updatedAt: z.date().optional(),
 });
 export type LessonDetail = z.infer<typeof lessonDetail>;
+const createLessonDetail = lessonDetail.omit({ id: true, contentId: true });
+export type CreateLessonDetail = z.infer<typeof createLessonDetail>;
 
-/*
- * ************* Video *************
- */
 export const videoProviderSchema = z.enum([
 	"r2",
 	"youtube",
@@ -170,8 +169,11 @@ export const videoDetailDTO = z.object({
 	thumbnailUrl: z.string(),
 });
 export type VideoDetailDTO = z.infer<typeof videoDetailDTO>;
-// export const createLessonDetail = lessonDetail.omit({ id: true });
-// export type CreateLessonDetail = z.infer<typeof createLessonDetail>;
+export const createVideoDetail = videoDetailDTO.omit({
+	id: true,
+	contentId: true,
+});
+export type CreateVideoDetail = z.infer<typeof createLessonDetail>;
 
 export const fileDetailDTO = z.object({
 	id: z.number(),
@@ -182,6 +184,10 @@ export const fileDetailDTO = z.object({
 	size: z.number().optional(),
 });
 export type FileDetailDTO = z.infer<typeof fileDetailDTO>;
+export const createFileDetail = fileDetailDTO.omit({
+	id: true,
+	contentId: true,
+});
 
 // Lesson Combo
 export const lessonContentItem = contentItemDTO.extend({
@@ -224,16 +230,49 @@ export const fullContentItem = z.discriminatedUnion("type", [
 export type FullContentItem = z.infer<typeof fullContentItem>;
 export const editFullContentItem = fullContentItem;
 export type EditFullContentItem = z.infer<typeof editFullContentItem>;
-const commonOmissions = { id: true } as const;
 
-const createFullContentItem = z.discriminatedUnion("type", [
-	lessonContentItem.omit(commonOmissions),
-	quizContentItem.omit(commonOmissions),
-	fileContentItem.omit(commonOmissions),
-	moduleContentItem.omit(commonOmissions),
-	videoContentItem.omit(commonOmissions),
+const createVideoContentItem = contentItemDTO
+	.extend({
+		type: z.literal("video"),
+		details: createVideoDetail,
+	})
+	.omit({ id: true });
+
+const createFileContentItem = contentItemDTO
+	.extend({
+		type: z.literal("file"),
+		details: createFileDetail,
+	})
+	.omit({ id: true });
+
+const createLessonContentItem = contentItemDTO
+	.extend({
+		type: z.literal("lesson"),
+		details: createLessonDetail,
+	})
+	.omit({ id: true });
+
+const createQuizContentItem = contentItemDTO
+	.extend({
+		type: z.literal("quiz"),
+		details: z.any(), // Update when quizDetail schema is defined
+	})
+	.omit({ id: true });
+
+const createModuleContentItem = contentItemDTO
+	.extend({
+		type: z.literal("module"),
+		details: z.any(), // Update when moduleDetail schema is defined
+	})
+	.omit({ id: true });
+
+export const createFullContentItem = z.discriminatedUnion("type", [
+	createLessonContentItem,
+	createQuizContentItem,
+	createFileContentItem,
+	createModuleContentItem,
+	createVideoContentItem,
 ]);
-
 export type CreateFullContentItem = z.infer<typeof createFullContentItem>;
 
 // export const createVideoDetailDTO = videoDetailDTO.omit({ id: true });
