@@ -489,6 +489,12 @@ const createCRUD = (
 						.where(eq(schema.videoDetail.contentId, data.id));
 					break;
 				}
+				case "file": {
+					await db
+						.update(schema.fileDetail)
+						.set(detail)
+						.where(eq(schema.fileDetail.contentId, data.id));
+				}
 				default: {
 					console.log("data type not supported yet", data.type);
 					break;

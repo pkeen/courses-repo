@@ -22,25 +22,7 @@ export interface CourseManager {
 
 export const CourseManager = (dbAdapter: DBAdapter): CourseManager => {
 	return {
-		// create: async (input: CourseInput) => {
-		// 	return dbAdapter.createCourse(input);
-		// },
-		// getCourse: async (id: string) => {
-		// 	return dbAdapter.getCourse(id);
-		// },
-		// update: async (id: string, input: Partial<CourseInput>) => {
-		// 	return dbAdapter.updateCourse(id, input);
-		// },
-		// delete: async (id: string) => {
-		// 	return dbAdapter.deleteCourse(id);
-		// },
-		// list: async () => {
-		// 	return dbAdapter.listCourses();
-		// },
-		// module: dbAdapter.module,
-		// lesson: dbAdapter.lesson,
 		course: dbAdapter.course,
 		content: dbAdapter.content,
-		// video: dbAdapter.video,
 	};
 };
