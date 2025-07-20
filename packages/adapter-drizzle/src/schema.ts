@@ -164,6 +164,9 @@ export const schemaTables = {
 
 export type SchemaTables = typeof schemaTables;
 
+export const tablesArray = Object.values(schemaTables);
+export type TablesArray = typeof tablesArray;
+
 // Simulate the result of calling drizzle() with schema:
 export type DrizzleDbWithSchema = ReturnType<typeof drizzle<SchemaTables>>;
 export type DefaultSchema = ReturnType<typeof createSchema>;

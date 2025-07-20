@@ -15,10 +15,14 @@
 	"scripts": {
 		"build": "rollup -c",
 		"dev": "rollup -c -w",
-		"test": "jest",
-		"types": "tsc --noEmit"
+		"types": "tsc --noEmit",
+		"db:start": "docker run --rm -d -e POSTGRES_USER=test -e POSTGRES_PASSWORD=test -e POSTGRES_DB=courses_test -p 5433:5432 --name pg-test postgres:15",
+		"db:stop": "docker stop pg-test",
+		"wait-for-db": "tsx __tests__/wait-for-db.ts",
+		"test": "pnpm db:start && pnpm wait-for-db && vitest run && pnpm db:stop"
 	},
 	"dependencies": {
+		"pg": "^8.16.3",
 		"zod": "^3.0.0"
 	},
 	"peerDependencies": {
@@ -26,11 +30,18 @@
 		"typescript": "^5.0.0"
 	},
 	"devDependencies": {
-        "@pete_keen/courses-core": "workspace:*",
+		"@pete_keen/courses-core": "workspace:*",
 		"@rollup/plugin-commonjs": "^28.0.1",
 		"@rollup/plugin-multi-entry": "^6.0.1",
 		"@rollup/plugin-node-resolve": "^15.3.0",
 		"@rollup/plugin-typescript": "^12.1.1",
-		"rollup": "^4.36.0"
+		"@types/node": "^22.15.30",
+		"@types/pg": "^8.15.4",
+		"drizzle-kit": "^0.31.4",
+		"rollup": "^4.36.0",
+		"ts-node": "^10.9.2",
+		"tsx": "^4.20.3",
+		"typescript": "^5.0.0",
+		"vitest": "^3.2.4"
 	}
 }

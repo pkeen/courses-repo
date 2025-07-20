@@ -1,2 +1,2 @@
-export * from "./drizzle-pg";
+export * from "./adapter";
 export * from "./schema";
