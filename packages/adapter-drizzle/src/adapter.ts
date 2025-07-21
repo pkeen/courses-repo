@@ -1,5 +1,10 @@
 import { ContentItemCRUD, CourseCRUD } from "@pete_keen/courses-core/types";
-import { createSchema, DrizzleDbWithSchema, DefaultSchema } from "./schema";
+import {
+	createSchema,
+	DrizzleDbWithSchema,
+	DefaultSchema,
+	DrizzleDatabase,
+} from "./schema";
 import {
 	contentItemDTO,
 	ContentItemDTO,
@@ -17,53 +22,54 @@ import {
 	FullContentItem,
 } from "@pete_keen/courses-core/validators";
 import { eq, inArray } from "drizzle-orm";
+import { assignClientIds, flattenCourseNodes } from "./utils";
 
 // const defaultSchema = createSchema();
 
 const toDBId = (id: string): number => parseInt(id, 10);
 
 const createCRUD = (
-	db: DrizzleDbWithSchema,
+	db: DrizzleDatabase,
 	schema: DefaultSchema
 ): {
 	course: CourseCRUD;
 	content: ContentItemCRUD;
 } => {
-	const createCourseRepo = (db: DrizzleDbWithSchema) => {
-		function assignClientIds(
-			nodes: CourseTreeItem[],
-			parentClientId: string = "",
-			depth: number = 0
-		): void {
-			nodes.forEach((node, index) => {
-				node.clientId = `${parentClientId}${depth}-${index}`;
-				assignClientIds(node.children, `${node.clientId}-`, depth + 1);
-			});
-		}
+	const createCourseRepo = (db: DrizzleDatabase) => {
+		// function assignClientIds(
+		// 	nodes: CourseTreeItem[],
+		// 	parentClientId: string = "",
+		// 	depth: number = 0
+		// ): void {
+		// 	nodes.forEach((node, index) => {
+		// 		node.clientId = `${parentClientId}${depth}-${index}`;
+		// 		assignClientIds(node.children, `${node.clientId}-`, depth + 1);
+		// 	});
+		// }
 
-		const flattenCourseNodes = (
-			nodes: CourseTreeItemUpsert[],
-			parentId: number | null,
-			flat: {
-				id?: number;
-				order: number;
-				contentId: number;
-				parentId: number | null;
-			}[] = []
-		): typeof flat => {
-			for (const node of nodes) {
-				flat.push({
-					id: node.id,
-					order: node.order,
-					contentId: node.contentId,
-					parentId,
-				});
-				if (node.children) {
-					flattenCourseNodes(node.children, node.id ?? null, flat);
-				}
-			}
-			return flat;
-		};
+		// const flattenCourseNodes = (
+		// 	nodes: CourseTreeItemUpsert[],
+		// 	parentId: number | null,
+		// 	flat: {
+		// 		id?: number;
+		// 		order: number;
+		// 		contentId: number;
+		// 		parentId: number | null;
+		// 	}[] = []
+		// ): typeof flat => {
+		// 	for (const node of nodes) {
+		// 		flat.push({
+		// 			id: node.id,
+		// 			order: node.order,
+		// 			contentId: node.contentId,
+		// 			parentId,
+		// 		});
+		// 		if (node.children) {
+		// 			flattenCourseNodes(node.children, node.id ?? null, flat);
+		// 		}
+		// 	}
+		// 	return flat;
+		// };
 
 		const syncCourseTree = async (
 			courseId: number,
@@ -133,42 +139,42 @@ const createCRUD = (
 			}
 		};
 
-		const upsertNodeRecursive = async (
-			node: CourseTreeItemUpsert,
-			parentId: number | null,
-			courseId: number
-		) => {
-			if (node.id) {
-				// Update
-				await db
-					.update(schema.courseNode)
-					.set({
-						order: node.order,
-						parentId,
-						contentId: node.contentId,
-					})
-					.where(eq(schema.courseNode.id, node.id));
-			} else {
-				// Create
-				const inserted = await db
-					.insert(schema.courseNode)
-					.values({
-						courseId,
-						parentId,
-						order: node.order,
-						contentId: node.contentId,
-					})
-					.returning({ id: schema.courseNode.id });
+		// const upsertNodeRecursive = async (
+		// 	node: CourseTreeItemUpsert,
+		// 	parentId: number | null,
+		// 	courseId: number
+		// ) => {
+		// 	if (node.id) {
+		// 		// Update
+		// 		await db
+		// 			.update(schema.courseNode)
+		// 			.set({
+		// 				order: node.order,
+		// 				parentId,
+		// 				contentId: node.contentId,
+		// 			})
+		// 			.where(eq(schema.courseNode.id, node.id));
+		// 	} else {
+		// 		// Create
+		// 		const inserted = await db
+		// 			.insert(schema.courseNode)
+		// 			.values({
+		// 				courseId,
+		// 				parentId,
+		// 				order: node.order,
+		// 				contentId: node.contentId,
+		// 			})
+		// 			.returning({ id: schema.courseNode.id });
 
-				node.id = inserted[0].id; // so children can use it as parentId
-			}
+		// 		node.id = inserted[0].id; // so children can use it as parentId
+		// 	}
 
-			if (node.children) {
-				for (const child of node.children) {
-					await upsertNodeRecursive(child, node.id, courseId);
-				}
-			}
-		};
+		// 	if (node.children) {
+		// 		for (const child of node.children) {
+		// 			await upsertNodeRecursive(child, node.id, courseId);
+		// 		}
+		// 	}
+		// };
 
 		const list = async (): Promise<CourseDTO[]> => {
 			const results = await db.select().from(schema.course);
@@ -331,7 +337,7 @@ const createCRUD = (
 		};
 	};
 
-	const contentItemRepo = (db: DrizzleDbWithSchema) => {
+	const contentItemRepo = (db: DrizzleDatabase) => {
 		const list = async ({ type }: { type?: ContentType } = {}): Promise<
 			ContentItemDTO[]
 		> => {
@@ -518,7 +524,7 @@ const createCRUD = (
 };
 
 export const DrizzlePGAdapter = (
-	db: DrizzleDbWithSchema,
+	db: DrizzleDatabase,
 	schema: DefaultSchema = createSchema()
 ): DBAdapter => {
 	return {
@@ -532,7 +538,7 @@ export interface DBAdapter {
 }
 
 export const createCoursesDBAdapter = (
-	db: DrizzleDbWithSchema,
+	db: DrizzleDatabase,
 	schema: DefaultSchema = createSchema()
 ) => {
 	return {

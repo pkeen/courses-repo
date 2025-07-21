@@ -9,8 +9,12 @@ import {
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { beforeAll, beforeEach, it, expect, describe } from "vitest";
 import { resetTable, resetTables } from "./utils";
+import { DrizzlePGAdapter, createCoursesDBAdapter } from "../src/adapter";
 
-const schema = createSchema();
+// const schema = createSchema();
+// const adapter = DrizzlePGAdapter(db)
+
+const { adapter, schema } = createCoursesDBAdapter(db);
 
 beforeAll(async () => {
 	console.warn("running migrations");
@@ -19,9 +23,6 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-	// for (const table of tablesArray) {
-	// 	resetTable(db, table, "courses");
-	// }
 	await resetTables(db, tablesArray);
 });
 
