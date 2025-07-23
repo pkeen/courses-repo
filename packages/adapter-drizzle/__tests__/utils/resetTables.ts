@@ -1,6 +1,6 @@
 import { Table, getTableName, sql } from "drizzle-orm";
-import type { DB } from "./db";
-import type { SchemaTables, TablesArray } from "../src/schema";
+import type { DB } from "../db";
+import type { SchemaTables, TablesArray } from "../../src/schema";
 
 // // Reset tables
 // export async function resetTable(db: db, table: Table) {

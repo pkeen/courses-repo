@@ -30,6 +30,7 @@
 		"typescript": "^5.0.0"
 	},
 	"devDependencies": {
+		"@faker-js/faker": "^9.9.0",
 		"@pete_keen/courses-core": "workspace:*",
 		"@rollup/plugin-commonjs": "^28.0.1",
 		"@rollup/plugin-multi-entry": "^6.0.1",
