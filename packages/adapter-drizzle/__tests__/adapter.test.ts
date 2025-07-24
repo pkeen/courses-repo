@@ -199,7 +199,7 @@ describe("Lesson Content Item: create, edit, get, destroy", () => {
 });
 
 describe("Video Content Item: create, edit, get, destroy", () => {
-	it("creates a lesson and returns it", async () => {
+	it("creates a video and returns it", async () => {
 		const newVideo: CreateFullContentItem = {
 			title: "Test Video",
 			type: "video",
@@ -223,7 +223,7 @@ describe("Video Content Item: create, edit, get, destroy", () => {
 		expect(result.details.contentId).toEqual(result.id);
 	});
 
-	it("updates an existing lesson and returns it", async () => {
+	it("updates an existing video and returns it", async () => {
 		const newVideo: CreateFullContentItem = {
 			title: "Test Video",
 			type: "video",
@@ -256,6 +256,71 @@ describe("Video Content Item: create, edit, get, destroy", () => {
 		expect(result.details.contentId).toEqual(result.id);
 		expect(result.details.url).toBe(updatedVideo.details.url);
 		expect(result.details.thumbnailUrl).toBe(newVideo.details.thumbnailUrl);
+
+		expect(+result.updatedAt).toBeGreaterThan(+saved.updatedAt);
+	});
+});
+
+describe("File Content Item: create, edit, get, destroy", () => {
+	it("creates a file and returns it", async () => {
+		const newFile: CreateFullContentItem = {
+			title: "Test File",
+			type: "file",
+			isPublished: true,
+			details: {
+				fileName: "test-file.pdf",
+				fileUrl: "somelink.com/link",
+				mimeType: "application/pdf",
+				size: 1111,
+			},
+		};
+
+		const result = await adapter.content.create(newFile);
+
+		const parsed = fullContentItem.safeParse(result);
+		expect(parsed.success).toBe(true);
+
+		expect(result.title).toBe(newFile.title);
+		expect(result.type).toBe(newFile.type);
+		expect(result.isPublished).toBe(true);
+		expect(result.id).toBeDefined();
+		expect(result.details.contentId).toEqual(result.id);
+	});
+
+	it("updates an file lesson and returns it", async () => {
+		const newFile: CreateFullContentItem = {
+			title: "Test File",
+			type: "file",
+			isPublished: true,
+			details: {
+				fileName: "test-file.pdf",
+				fileUrl: "somelink.com/link",
+				mimeType: "application/pdf",
+				size: 1111,
+			},
+		};
+
+		const saved = await adapter.content.create(newFile);
+
+		const updatedFile: EditFullContentItem = {
+			...saved,
+			title: "Updated File",
+			details: {
+				...saved.details,
+				fileUrl: "differntUrl.com",
+			},
+		};
+		const result = await adapter.content.update(updatedFile);
+
+		const parsed = fullContentItem.safeParse(result);
+		expect(parsed.success).toBe(true);
+
+		expect(result.title).toBe(updatedFile.title);
+		expect(result.type).toBe(newFile.type);
+		expect(result.isPublished).toBe(newFile.isPublished);
+		expect(result.details.contentId).toEqual(result.id);
+		expect(result.details.fileName).toBe(newFile.details.fileName);
+		expect(result.details.fileUrl).toBe(updatedFile.details.fileUrl);
 
 		expect(+result.updatedAt).toBeGreaterThan(+saved.updatedAt);
 	});

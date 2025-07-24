@@ -501,6 +501,7 @@ const createCRUD = (
 						.update(schema.fileDetail)
 						.set(detail)
 						.where(eq(schema.fileDetail.contentId, data.id));
+					break;
 				}
 				default: {
 					console.log("data type not supported yet", data.type);

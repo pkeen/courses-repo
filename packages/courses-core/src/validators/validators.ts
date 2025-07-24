@@ -181,7 +181,7 @@ export const fileDetailDTO = z.object({
 	fileName: z.string(),
 	fileUrl: z.string(),
 	mimeType: z.string(), // e.g., "application/pdf"
-	size: z.number().optional(),
+	size: z.number(),
 });
 export type FileDetailDTO = z.infer<typeof fileDetailDTO>;
 export const createFileDetail = fileDetailDTO.omit({
