@@ -406,10 +406,6 @@ const createCRUD = (
 						.select()
 						.from(schema.videoDetail)
 						.where(eq(schema.videoDetail.contentId, base[0].id));
-					console.log("ContentItem", {
-						...base[0],
-						details: detail[0],
-					});
 					if (!detail[0]) return null;
 					return fullContentItem.parse({
 						...base[0],
@@ -447,21 +443,26 @@ const createCRUD = (
 			// spread details and add contentItem Id
 			const detail = { ...data.details, contentId: newContentItem.id };
 
-			switch (detail.type) {
+			switch (data.type) {
 				case "lesson": {
 					await db.insert(schema.lessonDetail).values(detail);
+					break;
 				}
 				case "video": {
 					await db.insert(schema.videoDetail).values(detail);
+					break;
 				}
 				case "file": {
 					await db.insert(schema.fileDetail).values(detail);
+					break;
 				}
 				case "quiz": {
-					// TODO
-					console.error("not supported yet");
+					console.error("Quiz creation not implemented yet");
+					break;
 				}
 			}
+
+			return await get(newContentItem.id);
 		};
 
 		const update = async (data: FullContentItem) => {
@@ -506,6 +507,8 @@ const createCRUD = (
 					break;
 				}
 			}
+
+			return await get(base.id);
 		};
 
 		return {

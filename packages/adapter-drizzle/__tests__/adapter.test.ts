@@ -12,6 +12,12 @@ import { resetTable, resetTables } from "./utils/resetTables";
 import { DrizzlePGAdapter, createCoursesDBAdapter } from "../src/adapter";
 import { seed } from "./utils/seed";
 import { eq } from "drizzle-orm";
+import {
+	CreateFullContentItem,
+	EditFullContentItem,
+	fullContentItem,
+	FullContentItem,
+} from "@pete_keen/courses-core/validators";
 
 // const schema = createSchema();
 // const adapter = DrizzlePGAdapter(db)
@@ -24,11 +30,11 @@ beforeAll(async () => {
 	console.log("✅ Migrations finished");
 
 	// Seeding
-	await seed(db, schema);
+	// await seed(db, schema);
 });
 
 beforeEach(async () => {
-	// await resetTables(db, tablesArray);
+	await resetTables(db, tablesArray);
 });
 
 describe("Basic DB test", () => {
@@ -49,6 +55,209 @@ describe("Basic DB test", () => {
 			.where(eq(schema.contentItem.title, "Hello, world!"));
 
 		expect(results.length).toBe(1);
+	});
+});
+
+// describe("Content Items CRUD", () => {
+//     it("it inserts a module and reads it back")
+// })
+
+describe("contentItemRepo.list", () => {
+	it("returns an empty array if no items exist", async () => {
+		const result = await adapter.content.list();
+		expect(result).toEqual([]);
+	});
+
+	it("returns all content items when no type filter is passed", async () => {
+		await db.insert(schema.contentItem).values([
+			{ title: "Lesson", type: "lesson", isPublished: true },
+			{ title: "File", type: "file", isPublished: true },
+		]);
+
+		const result = await adapter.content.list();
+		expect(result).toHaveLength(2);
+	});
+
+	it("filters content items by type", async () => {
+		await db.insert(schema.contentItem).values([
+			{ title: "Lesson", type: "lesson", isPublished: true },
+			{ title: "File", type: "file", isPublished: true },
+		]);
+
+		const result = await adapter.content.list({ type: "lesson" });
+		expect(result).toHaveLength(1);
+		expect(result[0].type).toBe("lesson");
+	});
+});
+
+describe("Module Content Item: create, edit, get, destroy", () => {
+	it("creates a module and returns it", async () => {
+		const newModule: CreateFullContentItem = {
+			title: "Test Module",
+			type: "module",
+			isPublished: true,
+			details: {},
+		};
+
+		const result = await adapter.content.create(newModule);
+
+		const parsed = fullContentItem.safeParse(result);
+		expect(parsed.success).toBe(true);
+
+		expect(result.title).toBe(newModule.title);
+		expect(result.type).toBe(newModule.type);
+		expect(result.isPublished).toBe(true);
+		expect(result.id).toBeDefined();
+	});
+
+	it("updates an existing module and returns it", async () => {
+		const newModule: CreateFullContentItem = {
+			title: "Test Module",
+			type: "module",
+			isPublished: true,
+			details: {},
+		};
+
+		const saved = await adapter.content.create(newModule);
+
+		const updatedModule: EditFullContentItem = {
+			...saved,
+			title: "Updated Module",
+		};
+		const result = await adapter.content.update(updatedModule);
+
+		const parsed = fullContentItem.safeParse(result);
+		expect(parsed.success).toBe(true);
+
+		expect(result.title).toBe(updatedModule.title);
+		expect(result.type).toBe(newModule.type);
+		expect(result.isPublished).toBe(true);
+		expect(+result.updatedAt).toBeGreaterThan(+saved.updatedAt);
+	});
+});
+
+describe("Lesson Content Item: create, edit, get, destroy", () => {
+	it("creates a lesson and returns it", async () => {
+		const newLesson: CreateFullContentItem = {
+			title: "Test Lesson",
+			type: "lesson",
+			isPublished: true,
+			details: {
+				excerpt: "Lorem ipsum...",
+				bodyContent: "##Details of the body content",
+			},
+		};
+
+		const result = await adapter.content.create(newLesson);
+
+		const parsed = fullContentItem.safeParse(result);
+		expect(parsed.success).toBe(true);
+
+		expect(result.title).toBe(newLesson.title);
+		expect(result.type).toBe(newLesson.type);
+		expect(result.isPublished).toBe(true);
+		expect(result.id).toBeDefined();
+		expect(result.details.contentId).toEqual(result.id);
+	});
+
+	it("updates an existing lesson and returns it", async () => {
+		const newLesson: CreateFullContentItem = {
+			title: "Test Lesson",
+			type: "lesson",
+			isPublished: true,
+			details: {
+				excerpt: "Lorem ipsum...",
+				bodyContent: "##Details of the body content",
+			},
+			// createdAt: new Date(),
+			// updatedAt: new Date(),
+		};
+
+		const saved = await adapter.content.create(newLesson);
+
+		const updatedLesson: EditFullContentItem = {
+			...saved,
+			title: "Updated Lesson",
+			details: {
+				...saved.details,
+				excerpt: "Edited excerpt",
+			},
+		};
+		const result = await adapter.content.update(updatedLesson);
+
+		const parsed = fullContentItem.safeParse(result);
+		expect(parsed.success).toBe(true);
+
+		expect(result.title).toBe(updatedLesson.title);
+		expect(result.type).toBe(newLesson.type);
+		expect(result.isPublished).toBe(newLesson.isPublished);
+		expect(result.details.contentId).toEqual(result.id);
+		expect(result.details.excerpt).toBe(updatedLesson.details.excerpt);
+
+		expect(+result.updatedAt).toBeGreaterThan(+saved.updatedAt);
+	});
+});
+
+describe("Video Content Item: create, edit, get, destroy", () => {
+	it("creates a lesson and returns it", async () => {
+		const newVideo: CreateFullContentItem = {
+			title: "Test Video",
+			type: "video",
+			isPublished: true,
+			details: {
+				provider: "youtube",
+				url: "somelink.com",
+				thumbnailUrl: "thumbnail.com",
+			},
+		};
+
+		const result = await adapter.content.create(newVideo);
+
+		const parsed = fullContentItem.safeParse(result);
+		expect(parsed.success).toBe(true);
+
+		expect(result.title).toBe(newVideo.title);
+		expect(result.type).toBe(newVideo.type);
+		expect(result.isPublished).toBe(true);
+		expect(result.id).toBeDefined();
+		expect(result.details.contentId).toEqual(result.id);
+	});
+
+	it("updates an existing lesson and returns it", async () => {
+		const newVideo: CreateFullContentItem = {
+			title: "Test Video",
+			type: "video",
+			isPublished: true,
+			details: {
+				provider: "youtube",
+				url: "somelink.com",
+				thumbnailUrl: "thumbnail.com",
+			},
+		};
+
+		const saved = await adapter.content.create(newVideo);
+
+		const updatedVideo: EditFullContentItem = {
+			...saved,
+			title: "Updated Video",
+			details: {
+				...saved.details,
+				url: "differntUrl.com",
+			},
+		};
+		const result = await adapter.content.update(updatedVideo);
+
+		const parsed = fullContentItem.safeParse(result);
+		expect(parsed.success).toBe(true);
+
+		expect(result.title).toBe(updatedVideo.title);
+		expect(result.type).toBe(newVideo.type);
+		expect(result.isPublished).toBe(newVideo.isPublished);
+		expect(result.details.contentId).toEqual(result.id);
+		expect(result.details.url).toBe(updatedVideo.details.url);
+		expect(result.details.thumbnailUrl).toBe(newVideo.details.thumbnailUrl);
+
+		expect(+result.updatedAt).toBeGreaterThan(+saved.updatedAt);
 	});
 });
 

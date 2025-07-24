@@ -51,20 +51,29 @@ export interface CourseCRUD
 		EditCourseTreeDTO,
 		CourseDTO
 	> {}
-
 // export interface LessonCRUD
 // 	extends CRUDOperations<LessonDetail, CreateLessonDTO, EditLessonDTO, LessonDetail> {
 // 	findUsage: (id: number) => Promise<LessonUsage>;
 // }
 
 
-export interface ContentItemCRUD
-	extends CRUDOperations<
-		FullContentItem,
-		CreateFullContentItem,
-		EditFullContentItem,
-		ContentItemDTO
-	> {}
+// export interface ContentItemCRUD
+// 	extends CRUDOperations<
+// 		FullContentItem,
+// 		CreateFullContentItem,
+// 		EditFullContentItem,
+//         ContentItemDTO
+// 	> {
+//         list: (options: {type?: ContentType}) => Promise<ContentItemDTO[]>
+//     }
+
+export interface ContentItemCRUD {
+	get: (id: number) => Promise<FullContentItem | null>;
+	create: (data: CreateFullContentItem) => Promise<FullContentItem>;
+	update: (data: EditFullContentItem) => Promise<FullContentItem>;
+	destroy: (id: number) => Promise<void>;
+	list: (options?: {type?: ContentType}) => Promise<ContentItemDTO[]>;
+}
 
 export interface ContentUsage {
 	courseNodes: CourseNodeDTO[];

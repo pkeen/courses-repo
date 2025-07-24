@@ -135,7 +135,7 @@ export const lessonDetail = z.object({
 	id: z.number(),
 	contentId: z.number(),
 	// title: z.string(),
-	videoContentId: z.number(),
+	videoContentId: z.number().optional().nullable(),
 	excerpt: z.string(), // short summary for previews
 	bodyContent: z.string(), // raw markdown or HTML
 	createdAt: z.date().optional(),
