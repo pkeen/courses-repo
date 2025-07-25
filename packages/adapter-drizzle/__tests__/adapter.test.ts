@@ -17,7 +17,15 @@ import {
 	EditFullContentItem,
 	fullContentItem,
 	FullContentItem,
+	courseDTO,
+	courseTreeDTO,
+	CourseTreeDTO,
+	CreateCourseTreeDTO,
+	createCourseTreeDTO,
+	editCourseTreeDTO,
+	EditCourseTreeDTO,
 } from "@pete_keen/courses-core/validators";
+import { afterEach } from "vitest";
 
 // const schema = createSchema();
 // const adapter = DrizzlePGAdapter(db)
@@ -323,6 +331,75 @@ describe("File Content Item: create, edit, get, destroy", () => {
 		expect(result.details.fileUrl).toBe(updatedFile.details.fileUrl);
 
 		expect(+result.updatedAt).toBeGreaterThan(+saved.updatedAt);
+	});
+});
+
+/*
+ * COURSES
+ */
+
+describe("Courses List Function", () => {
+	beforeEach(async () => {
+		await seed(db, schema);
+	});
+
+	afterEach(async () => {
+		await resetTables(db, tablesArray);
+	});
+
+	it("returns an empty array if no items exist", async () => {
+		await resetTables(db, tablesArray);
+		const result = await adapter.course.list();
+		expect(result).toEqual([]);
+	});
+
+	it("succesfully retrieves all 20 seeded courses", async () => {
+		const results = await adapter.course.list();
+		const parsed = courseDTO.array().safeParse(results);
+		expect(parsed.success).toBe(true);
+		expect(results.length).toEqual(20);
+	});
+});
+
+describe("Courses: CRUD", () => {
+	beforeEach(async () => {
+		await seed(db, schema);
+	});
+
+	afterEach(async () => {
+		await resetTables(db, tablesArray);
+	});
+
+	it("creates a full course and returns it equally", async () => {
+		const data: CreateCourseTreeDTO = {
+			title: "New Course Test",
+			userId: "test-user",
+			excerpt: "Lorem Ipsum....",
+			isPublished: true,
+			items: [
+				// {
+				// 	order: 0,
+				// 	contentId: 1,
+				// 	parentId: null,
+				// 	children: [
+                //         {order: 0, contentId: 3, parentId}
+                //     ],
+				// },
+				// {
+				// 	order: 1,
+				// 	contentId: 2,
+				// 	parentId: null,
+				// 	children: [],
+				// },
+			],
+		};
+
+		const result = await adapter.course.create(data);
+
+		const parsed = courseTreeDTO.safeParse(result);
+		expect(parsed.success).toBe(true);
+
+		expect(result.children[0].type).toBe("lesson");
 	});
 });
 

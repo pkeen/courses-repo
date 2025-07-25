@@ -85,7 +85,37 @@ export const courseTreeDTO = courseDTO.extend({
 });
 export type CourseTreeDTO = z.infer<typeof courseTreeDTO>;
 
-export const courseTreeItemUpsert: z.ZodType<any> = z.lazy(() =>
+export type CourseTreeItemUpsertInput = {
+	id?: number;
+	order: number;
+	contentId: number;
+	isPublished?: boolean;
+	parentId: number | null;
+	children?: CourseTreeItemUpsertInput[];
+	collapsed?: boolean; //
+	clientId?: string; //
+	title?: string; // none of these are relevant as not changed in db
+	type?: ContentType; //
+};
+
+export type CourseTreeItemUpsert = {
+	id?: number;
+	order: number;
+	contentId: number;
+	parentId: number | null;
+	children: CourseTreeItemUpsert[];
+	type?: ContentType;
+	title?: string;
+	isPublished?: boolean;
+	clientId?: string;
+	collapsed?: boolean;
+};
+
+export const courseTreeItemUpsert: z.ZodType<
+	CourseTreeItemUpsert,
+	z.ZodTypeDef,
+	CourseTreeItemUpsertInput
+> = z.lazy(() =>
 	z.object({
 		id: z.number().optional(),
 		type: contentType,
@@ -99,7 +129,7 @@ export const courseTreeItemUpsert: z.ZodType<any> = z.lazy(() =>
 		children: z.array(courseTreeItemUpsert).default([]),
 	})
 );
-export type CourseTreeItemUpsert = z.infer<typeof courseTreeItemUpsert>;
+export type CourseTreeItemUpsertDTO = z.infer<typeof courseTreeItemUpsert>;
 
 export const editCourseTreeDTO = courseTreeDTO.extend({
 	items: z.array(courseTreeItemUpsert).default([]),
