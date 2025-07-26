@@ -15,6 +15,7 @@ import {
 	FullContentItem,
 	EditFullContentItem,
 	CreateFullContentItem,
+	CreateCourseFlatNodesInput,
 } from "validators";
 
 export {
@@ -50,12 +51,13 @@ export interface CourseCRUD
 		CreateCourseTreeDTO,
 		EditCourseTreeDTO,
 		CourseDTO
-	> {}
+	> {
+	createFlat: (input: CreateCourseFlatNodesInput) => Promise<void>;
+}
 // export interface LessonCRUD
 // 	extends CRUDOperations<LessonDetail, CreateLessonDTO, EditLessonDTO, LessonDetail> {
 // 	findUsage: (id: number) => Promise<LessonUsage>;
 // }
-
 
 // export interface ContentItemCRUD
 // 	extends CRUDOperations<
@@ -72,7 +74,7 @@ export interface ContentItemCRUD {
 	create: (data: CreateFullContentItem) => Promise<FullContentItem>;
 	update: (data: EditFullContentItem) => Promise<FullContentItem>;
 	destroy: (id: number) => Promise<void>;
-	list: (options?: {type?: ContentType}) => Promise<ContentItemDTO[]>;
+	list: (options?: { type?: ContentType }) => Promise<ContentItemDTO[]>;
 }
 
 export interface ContentUsage {
