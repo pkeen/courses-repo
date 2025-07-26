@@ -15,6 +15,8 @@ import {
 	courseTreeDTO,
 	CourseTreeItem,
 	CourseTreeItemUpsert,
+	CreateCourseFlatNodesInput,
+	createCourseFlatNodesInput,
 	CreateCourseTreeDTO,
 	CreateFullContentItem,
 	EditCourseTreeDTO,
@@ -328,12 +330,18 @@ const createCRUD = (
 			}
 		};
 
+		const createFlat = async (input: CreateCourseFlatNodesInput) => {
+			// fail if input does not parse
+			const parsedInput = createCourseFlatNodesInput.parse(input);
+		};
+
 		return {
 			list,
 			get,
 			update,
 			destroy,
 			create,
+			createFlat,
 		};
 	};
 

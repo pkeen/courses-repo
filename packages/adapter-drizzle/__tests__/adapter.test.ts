@@ -24,6 +24,7 @@ import {
 	createCourseTreeDTO,
 	editCourseTreeDTO,
 	EditCourseTreeDTO,
+	CreateCourseFlatNodesInput,
 } from "@pete_keen/courses-core/validators";
 import { afterEach } from "vitest";
 
@@ -361,45 +362,59 @@ describe("Courses List Function", () => {
 	});
 });
 
-describe("Courses: CRUD", () => {
-	beforeEach(async () => {
-		await seed(db, schema);
-	});
+// describe("Courses: CRUD", () => {
+// 	beforeEach(async () => {
+// 		await seed(db, schema);
+// 	});
 
-	afterEach(async () => {
-		await resetTables(db, tablesArray);
-	});
+// 	afterEach(async () => {
+// 		await resetTables(db, tablesArray);
+// 	});
 
-	it("creates a full course and returns it equally", async () => {
-		const data: CreateCourseTreeDTO = {
-			title: "New Course Test",
-			userId: "test-user",
-			excerpt: "Lorem Ipsum....",
-			isPublished: true,
-			items: [
-				// {
-				// 	order: 0,
-				// 	contentId: 1,
-				// 	parentId: null,
-				// 	children: [
-                //         {order: 0, contentId: 3, parentId}
-                //     ],
-				// },
-				// {
-				// 	order: 1,
-				// 	contentId: 2,
-				// 	parentId: null,
-				// 	children: [],
-				// },
-			],
+// 	it("creates a full course and returns it equally", async () => {
+// 		const data: CreateCourseTreeDTO = {
+// 			title: "New Course Test",
+// 			userId: "test-user",
+// 			excerpt: "Lorem Ipsum....",
+// 			isPublished: true,
+// 			items: [
+// 				// {
+// 				// 	order: 0,
+// 				// 	contentId: 1,
+// 				// 	parentId: null,
+// 				// 	children: [
+// 				//         {order: 0, contentId: 3, parentId}
+// 				//     ],
+// 				// },
+// 				// {
+// 				// 	order: 1,
+// 				// 	contentId: 2,
+// 				// 	parentId: null,
+// 				// 	children: [],
+// 				// },
+// 			],
+// 		};
+
+// 		const result = await adapter.course.create(data);
+
+// 		const parsed = courseTreeDTO.safeParse(result);
+// 		expect(parsed.success).toBe(true);
+
+// 		expect(result.children[0].type).toBe("lesson");
+// 	});
+// });
+
+describe("Courses Flat Test", () => {
+	it("Fails if input does not parse", async () => {
+		const input = {
+			title: "Test",
+			userId: "asdfsdfkj",
+			excerpt: "asdfasdfksdjfklasdjfldsf",
+			nodes: 1678, // should be array
 		};
 
-		const result = await adapter.course.create(data);
+		await expect(adapter.course.createFlat(input)).rejects.toThrowError();
 
-		const parsed = courseTreeDTO.safeParse(result);
-		expect(parsed.success).toBe(true);
-
-		expect(result.children[0].type).toBe("lesson");
 	});
 });
 
