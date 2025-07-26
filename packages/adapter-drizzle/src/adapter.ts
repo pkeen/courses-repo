@@ -190,24 +190,64 @@ const createCRUD = (
 					)
 					.returning({ id: schema.courseNode.id });
 
+				// create a map of clientIds to newly created db ids
+				// this is placed outside the conditional create block bc it needs to still work in update as empty object
 				const clientIdToDbId: Record<string, number> = {};
+
 				toCreate.forEach((n, i) => {
 					clientIdToDbId[n.clientId] = inserted[i].id;
 				});
 				console.log("ClientIdToDbId", clientIdToDbId);
 
-				// /* pass 2 – patch parentId for EVERY incoming row */
-				// for (const n of incoming) {
-				// 	const dbId = n.id ?? clientIdToDbId[n.clientId];
-				// 	const parentDbId = n.clientParentId
-				// 		? clientIdToDbId[n.clientParentId] // parent created just now
-				// 		: null;
+				// push each toCreate to toUpdate
+				// this is because they will need parentId updating, but so may some pre-existing nodes
+				toCreate.forEach((n) => toUpdate.push(n));
+
+				console.log(
+					"To Update list with added toCreates... toUpdate",
+					toUpdate
+				);
+
+				// mutate the toUpdate array substituting ids and parentIds
+				toUpdate.forEach((node) => {
+					node.id = node.id ?? clientIdToDbId[node.clientId];
+					node.parentId = node.clientParentId
+						? clientIdToDbId[node.clientParentId]
+						: node.parentId;
+				});
+
+				console.log(
+					"Mutated update list with ids and parentIds added. toUpdate",
+					toUpdate
+				);
 
 				// 	await trx
 				// 		.update(courseNode)
 				// 		.set({ parentId: parentDbId })
 				// 		.where(eq(courseNode.id, dbId));
 				// }
+			}
+
+			// Update records
+			for (const n of toUpdate) {
+				await db
+					.update(schema.courseNode)
+					.set({
+						order: n.order,
+						parentId: n.parentId,
+						contentId: n.contentId,
+					})
+					.where(eq(schema.courseNode.id, n.id!));
+			}
+
+			// DELETE
+			if (toDelete.length) {
+				await db.delete(schema.courseNode).where(
+					inArray(
+						schema.courseNode.id,
+						toDelete.map((n) => n.id)
+					)
+				);
 			}
 		};
 

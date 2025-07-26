@@ -7,7 +7,7 @@ import {
 	tablesArray,
 } from "../src/schema";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
-import { beforeAll, beforeEach, it, expect, describe } from "vitest";
+import { beforeAll, beforeEach, it, expect, describe, afterAll } from "vitest";
 import { resetTable, resetTables } from "./utils/resetTables";
 import { DrizzlePGAdapter, createCoursesDBAdapter } from "../src/adapter";
 import { seed } from "./utils/seed";
@@ -447,6 +447,53 @@ describe("Coursees Flat testing", () => {
 			parentId: null,
 			contentId: 2,
 		},
+		{
+			// to be deleted
+			courseId: 1,
+			order: 2,
+			parentId: null,
+			contentId: 1,
+		},
+	];
+
+	const input: CourseNodeUpsert[] = [
+		{
+			// New node
+			courseId: 1,
+			order: 1,
+			parentId: null,
+			contentId: 1,
+			clientId: "cat",
+		},
+		{
+			// 2nd New node - child of new node
+			courseId: 1,
+			order: 0,
+			parentId: null,
+			contentId: 2,
+			clientId: "kitten",
+			clientParentId: "cat",
+		},
+		{
+			// Existing node - updated to be under new node
+			id: 1,
+			courseId: 1,
+			order: 1,
+			parentId: null,
+			contentId: 1,
+			clientId: "duckling",
+			clientParentId: "cat",
+		},
+		{
+			// existing node - reordered
+			id: 2,
+			courseId: 1,
+			order: 0,
+			parentId: null,
+			contentId: 2,
+			clientId: "pig",
+		},
+		// and one is missing meaning it must be deleted
 	];
 	beforeEach(async () => {
 		// some content items
@@ -458,41 +505,42 @@ describe("Coursees Flat testing", () => {
 		await db.insert(schema.course).values(existingCourse);
 		// some existing course nodes
 		await db.insert(schema.courseNode).values(existingNodes);
+
+		// run the new function
+		await adapter.course.syncFlatCourseNodes(1, input);
 	});
 
 	afterEach(async () => {
 		await resetTables(db, tablesArray);
 	});
 
-	it("TESTING syncFlatCourseNodes", async () => {
-		const input: CourseNodeUpsert[] = [
-			{
-				courseId: 1,
-				order: 0,
-				parentId: null,
-				contentId: 1,
-				clientId: "cat",
-			},
-			{
-				courseId: 1,
-				order: 0,
-				parentId: null,
-				contentId: 2,
-				clientId: "kitten",
-				clientParentId: "cat",
-			},
-			{
-				id: 1,
-				courseId: 1,
-				order: 1,
-				parentId: null,
-				contentId: 1,
-				clientId: "duckling",
-				clientParentId: "cat",
-			},
-		];
+	it("creates new nodes", async () => {
+		const nodes = await db.select().from(schema.courseNode);
+		expect(nodes.length).toEqual(4);
+	});
 
-		adapter.course.syncFlatCourseNodes(1, input);
+	it("updates an existing nodes parentId that is to be nested under a new node", async () => {
+		const [node] = await db
+			.select()
+			.from(schema.courseNode)
+			.where(eq(schema.courseNode.id, 1));
+		expect(node.parentId).toBe(4);
+	});
+
+	it("updates an existing node - regular", async () => {
+		const [node] = await db
+			.select()
+			.from(schema.courseNode)
+			.where(eq(schema.courseNode.id, 2));
+		expect(node.order).toBe(0);
+	});
+
+	it("deletes a node", async () => {
+		const nodes = await db
+			.select()
+			.from(schema.courseNode)
+			.where(eq(schema.courseNode.id, 3));
+		expect(nodes.length).toEqual(0);
 	});
 });
 
