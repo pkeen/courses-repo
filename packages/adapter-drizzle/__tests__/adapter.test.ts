@@ -25,6 +25,9 @@ import {
 	editCourseTreeDTO,
 	EditCourseTreeDTO,
 	CreateCourseFlatNodesInput,
+	CourseNodeUpsert,
+	CourseDTO,
+	CreateCourseNodeDTO,
 } from "@pete_keen/courses-core/validators";
 import { afterEach } from "vitest";
 
@@ -414,7 +417,82 @@ describe("Courses Flat Test", () => {
 		};
 
 		await expect(adapter.course.createFlat(input)).rejects.toThrowError();
+	});
 
+	// it("TESTING syncFlatCourseNodes", async () => {
+	//     const input: CourseNodeUpsert = {
+	//         courseId: 1,
+
+	//     }
+	// })
+});
+
+describe("Coursees Flat testing", () => {
+	const existingCourse: Omit<CourseDTO, "id"> = {
+		userId: "asd",
+		title: "Test Course",
+		excerpt: "lorem ipsum...",
+	};
+
+	const existingNodes: CreateCourseNodeDTO[] = [
+		{
+			courseId: 1,
+			order: 0,
+			parentId: null,
+			contentId: 1,
+		},
+		{
+			courseId: 1,
+			order: 1,
+			parentId: null,
+			contentId: 2,
+		},
+	];
+	beforeEach(async () => {
+		// some content items
+		await db.insert(schema.contentItem).values([
+			{ title: "Lesson", type: "lesson", isPublished: true },
+			{ title: "File", type: "file", isPublished: true },
+		]);
+		// a course
+		await db.insert(schema.course).values(existingCourse);
+		// some existing course nodes
+		await db.insert(schema.courseNode).values(existingNodes);
+	});
+
+	afterEach(async () => {
+		await resetTables(db, tablesArray);
+	});
+
+	it("TESTING syncFlatCourseNodes", async () => {
+		const input: CourseNodeUpsert[] = [
+			{
+				courseId: 1,
+				order: 0,
+				parentId: null,
+				contentId: 1,
+				clientId: "cat",
+			},
+			{
+				courseId: 1,
+				order: 0,
+				parentId: null,
+				contentId: 2,
+				clientId: "kitten",
+				clientParentId: "cat",
+			},
+			{
+				id: 1,
+				courseId: 1,
+				order: 1,
+				parentId: null,
+				contentId: 1,
+				clientId: "duckling",
+				clientParentId: "cat",
+			},
+		];
+
+		adapter.course.syncFlatCourseNodes(1, input);
 	});
 });
 

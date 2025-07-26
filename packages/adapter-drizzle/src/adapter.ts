@@ -11,6 +11,7 @@ import {
 	ContentType,
 	CourseDTO,
 	courseDTO,
+	CourseNodeUpsert,
 	CourseTreeDTO,
 	courseTreeDTO,
 	CourseTreeItem,
@@ -138,6 +139,75 @@ const createCRUD = (
 						contentId: n.contentId,
 					}))
 				);
+			}
+		};
+
+		const syncFlatCourseNodes = async (
+			courseId: number,
+			input: CourseNodeUpsert[]
+		) => {
+			console.log(input);
+			// Identify which are new to be created
+			const existing = await db
+				.select()
+				.from(schema.courseNode)
+				.where(eq(schema.courseNode.courseId, courseId));
+
+			const existingMap = new Map(existing.map((n) => [n.id, n]));
+			const incomingMap = new Map(
+				input.filter((n) => n.id).map((n) => [n.id!, n]) // this is to check against existing for deletions etc
+			);
+
+			const toDelete = existing.filter((n) => !incomingMap.has(n.id));
+			const toCreate = input.filter((n) => !n.id);
+			const toUpdate = input.filter((n) => {
+				if (!n.id) return false;
+				const old = existingMap.get(n.id);
+				return (
+					old &&
+					(old.order !== n.order ||
+						old.parentId !== n.parentId ||
+						old.contentId !== n.contentId)
+				);
+			});
+			console.log("exisiting map", existingMap);
+			console.log("Incoming Map", incomingMap);
+			console.log("toCreate", toCreate);
+			console.log("toUpdate", toUpdate);
+			console.log("toDelete", toDelete);
+
+			// CREATE
+			if (toCreate.length) {
+				const inserted = await db
+					.insert(schema.courseNode)
+					.values(
+						toCreate.map((n) => ({
+							courseId,
+							parentId: null, // update later
+							order: n.order,
+							contentId: n.contentId,
+						}))
+					)
+					.returning({ id: schema.courseNode.id });
+
+				const clientIdToDbId: Record<string, number> = {};
+				toCreate.forEach((n, i) => {
+					clientIdToDbId[n.clientId] = inserted[i].id;
+				});
+				console.log("ClientIdToDbId", clientIdToDbId);
+
+				// /* pass 2 – patch parentId for EVERY incoming row */
+				// for (const n of incoming) {
+				// 	const dbId = n.id ?? clientIdToDbId[n.clientId];
+				// 	const parentDbId = n.clientParentId
+				// 		? clientIdToDbId[n.clientParentId] // parent created just now
+				// 		: null;
+
+				// 	await trx
+				// 		.update(courseNode)
+				// 		.set({ parentId: parentDbId })
+				// 		.where(eq(courseNode.id, dbId));
+				// }
 			}
 		};
 
@@ -333,6 +403,23 @@ const createCRUD = (
 		const createFlat = async (input: CreateCourseFlatNodesInput) => {
 			// fail if input does not parse
 			const parsedInput = createCourseFlatNodesInput.parse(input);
+
+			const [created] = await db
+				.insert(schema.course)
+				.values({
+					userId: input.userId,
+					title: input.title,
+					excerpt: input.excerpt,
+					isPublished: input.isPublished ?? false,
+					createdAt: new Date(),
+					updatedAt: new Date(),
+				})
+				.returning({ id: schema.course.id });
+
+			const courseId = created.id;
+
+			// Step 2: Sync the tree using clientId/clientParentId logic
+			await syncFlatCourseNodes(courseId, input.nodes);
 		};
 
 		return {
@@ -342,6 +429,7 @@ const createCRUD = (
 			destroy,
 			create,
 			createFlat,
+			syncFlatCourseNodes,
 		};
 	};
 
