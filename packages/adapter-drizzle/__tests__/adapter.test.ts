@@ -28,6 +28,7 @@ import {
 	CourseNodeUpsert,
 	CourseDTO,
 	CreateCourseNodeDTO,
+	EditCourseFlatNodesInput,
 } from "@pete_keen/courses-core/validators";
 import { afterEach } from "vitest";
 
@@ -541,6 +542,312 @@ describe("Coursees Flat testing", () => {
 			.from(schema.courseNode)
 			.where(eq(schema.courseNode.id, 3));
 		expect(nodes.length).toEqual(0);
+	});
+});
+
+describe("Courses: updateFlat", () => {
+	const existingCourse: Omit<CourseDTO, "id"> = {
+		userId: "asd",
+		title: "Test Course",
+		excerpt: "lorem ipsum...",
+	};
+
+	const existingNodes: CreateCourseNodeDTO[] = [
+		{
+			courseId: 1,
+			order: 0,
+			parentId: null,
+			contentId: 1,
+		},
+		{
+			courseId: 1,
+			order: 1,
+			parentId: null,
+			contentId: 2,
+		},
+		{
+			courseId: 1,
+			order: 2,
+			parentId: null,
+			contentId: 1,
+		},
+		{
+			courseId: 1,
+			order: 0,
+			parentId: 3,
+			contentId: 2,
+		},
+	];
+
+	// const input: CourseNodeUpsert[] = [
+	// 	{
+	// 		// New node
+	// 		courseId: 1,
+	// 		order: 1,
+	// 		parentId: null,
+	// 		contentId: 1,
+	// 		clientId: "cat",
+	// 	},
+	// 	{
+	// 		// 2nd New node - child of new node
+	// 		courseId: 1,
+	// 		order: 0,
+	// 		parentId: null,
+	// 		contentId: 2,
+	// 		clientId: "kitten",
+	// 		clientParentId: "cat",
+	// 	},
+	// 	{
+	// 		// Existing node - updated to be under new node
+	// 		id: 1,
+	// 		courseId: 1,
+	// 		order: 1,
+	// 		parentId: null,
+	// 		contentId: 1,
+	// 		clientId: "duckling",
+	// 		clientParentId: "cat",
+	// 	},
+	// 	{
+	// 		// existing node - reordered
+	// 		id: 2,
+	// 		courseId: 1,
+	// 		order: 0,
+	// 		parentId: null,
+	// 		contentId: 2,
+	// 		clientId: "pig",
+	// 	},
+	// 	// and one is missing meaning it must be deleted
+	// ];
+	beforeEach(async () => {
+		// some content items
+		await db.insert(schema.contentItem).values([
+			{ title: "Lesson", type: "lesson", isPublished: true },
+			{ title: "File", type: "file", isPublished: true },
+		]);
+		// a course
+		await db.insert(schema.course).values(existingCourse);
+		// some existing course nodes
+		await db.insert(schema.courseNode).values(existingNodes);
+
+		// // run the new function
+		// await adapter.course.syncFlatCourseNodes(1, input);
+	});
+
+	afterEach(async () => {
+		await resetTables(db, tablesArray);
+	});
+
+	it("updates course details while leaving nodes remain unchanged", async () => {
+		const input: EditCourseFlatNodesInput = {
+			...existingCourse,
+			id: 1,
+			title: "Edited Course Title",
+			nodes: [
+				{
+					id: 1,
+					courseId: 1,
+					order: 0,
+					parentId: null,
+					contentId: 1,
+					clientId: "orange",
+				},
+				{
+					id: 2,
+					courseId: 1,
+					order: 1,
+					parentId: null,
+					contentId: 2,
+					clientId: "apple",
+				},
+				{
+					id: 3,
+					courseId: 1,
+					order: 2,
+					parentId: null,
+					contentId: 1,
+					clientId: "banana",
+				},
+				{
+					id: 4,
+					courseId: 1,
+					order: 0,
+					parentId: 3,
+					contentId: 2,
+					clientId: "raspberry",
+				},
+			],
+		};
+
+		await adapter.course.updateFlat(input);
+
+		const [editedCourse] = await db
+			.select()
+			.from(schema.course)
+			.where(eq(schema.course.id, 1));
+
+		expect(editedCourse.title).toEqual(input.title);
+	});
+
+	it("updates node order", async () => {
+		const input: EditCourseFlatNodesInput = {
+			...existingCourse,
+			id: 1,
+			nodes: [
+				{
+					id: 1,
+					courseId: 1,
+					order: 3,
+					parentId: null,
+					contentId: 1,
+					clientId: "orange",
+				},
+				{
+					id: 2,
+					courseId: 1,
+					order: 2,
+					parentId: null,
+					contentId: 2,
+					clientId: "apple",
+				},
+				{
+					id: 3,
+					courseId: 1,
+					order: 1,
+					parentId: null,
+					contentId: 1,
+					clientId: "banana",
+				},
+				{
+					id: 4,
+					courseId: 1,
+					order: 0,
+					parentId: null,
+					contentId: 2,
+					clientId: "raspberry",
+				},
+			],
+		};
+
+		await adapter.course.updateFlat(input);
+
+		const nodes = await db.select().from(schema.courseNode);
+
+		expect(nodes[0].order).toBe(3);
+	});
+
+	it("renests nodes", async () => {
+		// this test swaps nesting placing previously unested elements inside each other
+		const input: EditCourseFlatNodesInput = {
+			...existingCourse,
+			id: 1,
+			nodes: [
+				{
+					id: 4,
+					courseId: 1,
+					order: 0,
+					parentId: null,
+					contentId: 2,
+					clientId: "raspberry",
+				},
+				{
+					id: 3,
+					courseId: 1,
+					order: 0,
+					parentId: 4,
+					contentId: 1,
+					clientId: "banana",
+				},
+				{
+					id: 2,
+					courseId: 1,
+					order: 0,
+					parentId: 3,
+					contentId: 2,
+					clientId: "apple",
+				},
+				{
+					id: 1,
+					courseId: 1,
+					order: 0,
+					parentId: 2,
+					contentId: 1,
+					clientId: "orange",
+				},
+			],
+		};
+
+		await adapter.course.updateFlat(input);
+
+		const nodes = await db
+			.select()
+			.from(schema.courseNode)
+			.orderBy(schema.courseNode.id);
+		console.log(nodes);
+
+		expect(nodes[0].parentId).toBe(2);
+	});
+
+	it("renests nodes under new nodes", async () => {
+		const input: EditCourseFlatNodesInput = {
+			...existingCourse,
+			id: 1,
+			title: "Edited Course Title",
+			nodes: [
+				{
+					courseId: 1,
+					order: 0,
+					parentId: null,
+					contentId: 2,
+					clientId: "mango",
+				},
+				{
+					id: 1,
+					courseId: 1,
+					order: 0,
+					parentId: null,
+					contentId: 1,
+					clientId: "orange",
+					clientParentId: "mango",
+				},
+				{
+					id: 2,
+					courseId: 1,
+					order: 1,
+					parentId: 1,
+					contentId: 2,
+					clientId: "apple",
+				},
+				{
+					id: 3,
+					courseId: 1,
+					order: 2,
+					parentId: null,
+					contentId: 1,
+					clientId: "banana",
+					clientParentId: "mango",
+				},
+				{
+					id: 4,
+					courseId: 1,
+					order: 0,
+					parentId: 3,
+					contentId: 2,
+					clientId: "raspberry",
+				},
+			],
+		};
+
+		await adapter.course.updateFlat(input);
+
+		const nodes = await db
+			.select()
+			.from(schema.courseNode)
+			.orderBy(schema.courseNode.id);
+		console.log(nodes);
+
+		console.log(nodes);
+
+		expect(nodes[0].parentId).toBe(5);
 	});
 });
 

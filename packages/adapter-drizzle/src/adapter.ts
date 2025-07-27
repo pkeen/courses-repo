@@ -20,6 +20,8 @@ import {
 	createCourseFlatNodesInput,
 	CreateCourseTreeDTO,
 	CreateFullContentItem,
+	editCourseFlatNodesInput,
+	EditCourseFlatNodesInput,
 	EditCourseTreeDTO,
 	fullContentItem,
 	FullContentItem,
@@ -164,10 +166,11 @@ const createCRUD = (
 				if (!n.id) return false;
 				const old = existingMap.get(n.id);
 				return (
-					old &&
-					(old.order !== n.order ||
-						old.parentId !== n.parentId ||
-						old.contentId !== n.contentId)
+					(old &&
+						(old.order !== n.order ||
+							old.parentId !== n.parentId ||
+							old.contentId !== n.contentId)) ||
+					n.clientParentId
 				);
 			});
 			console.log("exisiting map", existingMap);
@@ -396,6 +399,30 @@ const createCRUD = (
 			}
 		};
 
+		const updateFlat = async (data: EditCourseFlatNodesInput) => {
+			try {
+				// fails if input incorrect
+				const parsedData = editCourseFlatNodesInput.parse(data);
+
+				// set data
+				// 1. Update course info
+				await db
+					.update(schema.course)
+					.set({
+						title: data.title,
+						excerpt: data.excerpt,
+						isPublished: data.isPublished ?? false,
+						updatedAt: new Date(),
+					})
+					.where(eq(schema.course.id, data.id));
+
+				// 2. Sync course nodes
+				await syncFlatCourseNodes(data.id, data.nodes);
+			} catch (err) {
+				throw err;
+			}
+		};
+
 		const destroy = async (courseId: number) => {
 			// Step 1: Delete courseNodes
 			await db
@@ -468,8 +495,9 @@ const createCRUD = (
 			update,
 			destroy,
 			create,
-			createFlat,
 			syncFlatCourseNodes,
+			updateFlat,
+			createFlat,
 		};
 	};
 

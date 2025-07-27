@@ -19,8 +19,6 @@ export const courseNodeDTO = z.object({
 	parentId: z.number().optional().nullable(),
 	order: z.number(),
 	contentId: z.number(),
-	createdAt: z.date().optional(),
-	updatedAt: z.date().optional(),
 });
 export type CourseNodeDTO = z.infer<typeof courseNodeDTO>;
 export const createCourseNodeDTO = courseNodeDTO.omit({ id: true });
@@ -350,3 +348,16 @@ export const createCourseFlatNodesInput = z.object({
 export type CreateCourseFlatNodesInput = z.infer<
 	typeof createCourseFlatNodesInput
 >;
+
+export const editCourseFlatNodesInput = createCourseFlatNodesInput.extend({
+	id: z.number(),
+});
+export type EditCourseFlatNodesInput = z.infer<typeof editCourseFlatNodesInput>;
+
+// courseNode expanded for GET
+export const courseNodeDisplay = courseNodeDTO.extend({
+	clientId: z.string(),
+	type: contentType,
+	title: z.string(),
+    // children and collapsed are only added by frontend
+});
