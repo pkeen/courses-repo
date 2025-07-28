@@ -16,6 +16,9 @@ import {
 	EditFullContentItem,
 	CreateFullContentItem,
 	CreateCourseFlatNodesInput,
+	EditCourseFlatNodesInput,
+	GetCourseFlatOutput,
+	CourseNodeUpsert,
 } from "validators";
 
 export {
@@ -53,6 +56,12 @@ export interface CourseCRUD
 		CourseDTO
 	> {
 	createFlat: (input: CreateCourseFlatNodesInput) => Promise<void>;
+	updateFlat: (input: EditCourseFlatNodesInput) => Promise<void>;
+	getFlat: (id: number) => Promise<GetCourseFlatOutput | null>;
+	syncFlatCourseNodes: (
+		courseId: number,
+		input: CourseNodeUpsert
+	) => Promise<void>;
 }
 // export interface LessonCRUD
 // 	extends CRUDOperations<LessonDetail, CreateLessonDTO, EditLessonDTO, LessonDetail> {

@@ -308,25 +308,9 @@ export type CreateFullContentItem = z.infer<typeof createFullContentItem>;
  */
 
 // Something like
-type CreateCourseNodeInput = {
-	clientId: string; // Temporary local ID (e.g., "a", "b", "a-1")
-	clientParentId: string | null; // Matches another clientId or null
-	order: number;
-	contentId: number;
-	parentId: number | null;
-};
-
-type CreateCourseTreeDTOFlat = {
-	title: string;
-	userId: string;
-	excerpt: string;
-	isPublished: boolean;
-	items: CreateCourseNodeInput[];
-};
 
 export const courseNodeUpsert = z.object({
 	id: z.number().optional(),
-	courseId: z.number(),
 	parentId: z.number().optional().nullable(),
 	clientId: z.string(),
 	clientParentId: z.string().optional(), // For new items with a new parent
@@ -355,9 +339,17 @@ export const editCourseFlatNodesInput = createCourseFlatNodesInput.extend({
 export type EditCourseFlatNodesInput = z.infer<typeof editCourseFlatNodesInput>;
 
 // courseNode expanded for GET
-export const courseNodeDisplay = courseNodeDTO.extend({
-	clientId: z.string(),
-	type: contentType,
-	title: z.string(),
-    // children and collapsed are only added by frontend
+export const courseNodeDisplay = courseNodeDTO
+	.extend({
+		clientId: z.string(),
+		type: contentType,
+		title: z.string(),
+		// children and collapsed are only added by frontend
+	})
+	.omit({ courseId: true });
+export type CourseNodeDisplay = z.infer<typeof courseNodeDisplay>;
+
+export const getCourseFlatOutput = courseDTO.extend({
+	nodes: z.array(courseNodeDisplay).default([]),
 });
+export type GetCourseFlatOutput = z.infer<typeof getCourseFlatOutput>;
