@@ -428,7 +428,7 @@ describe("Courses Flat Test", () => {
 	// })
 });
 
-describe("Coursees Flat testing", () => {
+describe("syncFlatCourseNodes: ", () => {
 	const existingCourse: Omit<CourseDTO, "id"> = {
 		userId: "asd",
 		title: "Test Course",
@@ -460,7 +460,6 @@ describe("Coursees Flat testing", () => {
 	const input: CourseNodeUpsert[] = [
 		{
 			// New node
-			courseId: 1,
 			order: 1,
 			parentId: null,
 			contentId: 1,
@@ -468,7 +467,6 @@ describe("Coursees Flat testing", () => {
 		},
 		{
 			// 2nd New node - child of new node
-			courseId: 1,
 			order: 0,
 			parentId: null,
 			contentId: 2,
@@ -478,7 +476,6 @@ describe("Coursees Flat testing", () => {
 		{
 			// Existing node - updated to be under new node
 			id: 1,
-			courseId: 1,
 			order: 1,
 			parentId: null,
 			contentId: 1,
@@ -488,7 +485,6 @@ describe("Coursees Flat testing", () => {
 		{
 			// existing node - reordered
 			id: 2,
-			courseId: 1,
 			order: 0,
 			parentId: null,
 			contentId: 2,
@@ -637,6 +633,10 @@ describe("Courses: updateFlat", () => {
 		await resetTables(db, tablesArray);
 	});
 
+	it("fails if supplied incorrect input shape", async () => {
+		await expect(adapter.course.updateFlat("hello")).rejects.toThrowError();
+	});
+
 	it("updates course details while leaving nodes remain unchanged", async () => {
 		const input: EditCourseFlatNodesInput = {
 			...existingCourse,
@@ -645,7 +645,6 @@ describe("Courses: updateFlat", () => {
 			nodes: [
 				{
 					id: 1,
-					courseId: 1,
 					order: 0,
 					parentId: null,
 					contentId: 1,
@@ -653,7 +652,6 @@ describe("Courses: updateFlat", () => {
 				},
 				{
 					id: 2,
-					courseId: 1,
 					order: 1,
 					parentId: null,
 					contentId: 2,
@@ -661,7 +659,6 @@ describe("Courses: updateFlat", () => {
 				},
 				{
 					id: 3,
-					courseId: 1,
 					order: 2,
 					parentId: null,
 					contentId: 1,
@@ -669,7 +666,6 @@ describe("Courses: updateFlat", () => {
 				},
 				{
 					id: 4,
-					courseId: 1,
 					order: 0,
 					parentId: 3,
 					contentId: 2,
@@ -695,7 +691,6 @@ describe("Courses: updateFlat", () => {
 			nodes: [
 				{
 					id: 1,
-					courseId: 1,
 					order: 3,
 					parentId: null,
 					contentId: 1,
@@ -703,7 +698,6 @@ describe("Courses: updateFlat", () => {
 				},
 				{
 					id: 2,
-					courseId: 1,
 					order: 2,
 					parentId: null,
 					contentId: 2,
@@ -711,7 +705,6 @@ describe("Courses: updateFlat", () => {
 				},
 				{
 					id: 3,
-					courseId: 1,
 					order: 1,
 					parentId: null,
 					contentId: 1,
@@ -719,7 +712,6 @@ describe("Courses: updateFlat", () => {
 				},
 				{
 					id: 4,
-					courseId: 1,
 					order: 0,
 					parentId: null,
 					contentId: 2,
@@ -743,7 +735,6 @@ describe("Courses: updateFlat", () => {
 			nodes: [
 				{
 					id: 4,
-					courseId: 1,
 					order: 0,
 					parentId: null,
 					contentId: 2,
@@ -751,7 +742,6 @@ describe("Courses: updateFlat", () => {
 				},
 				{
 					id: 3,
-					courseId: 1,
 					order: 0,
 					parentId: 4,
 					contentId: 1,
@@ -759,7 +749,6 @@ describe("Courses: updateFlat", () => {
 				},
 				{
 					id: 2,
-					courseId: 1,
 					order: 0,
 					parentId: 3,
 					contentId: 2,
@@ -767,7 +756,6 @@ describe("Courses: updateFlat", () => {
 				},
 				{
 					id: 1,
-					courseId: 1,
 					order: 0,
 					parentId: 2,
 					contentId: 1,
@@ -794,7 +782,6 @@ describe("Courses: updateFlat", () => {
 			title: "Edited Course Title",
 			nodes: [
 				{
-					courseId: 1,
 					order: 0,
 					parentId: null,
 					contentId: 2,
@@ -802,7 +789,6 @@ describe("Courses: updateFlat", () => {
 				},
 				{
 					id: 1,
-					courseId: 1,
 					order: 0,
 					parentId: null,
 					contentId: 1,
@@ -811,7 +797,6 @@ describe("Courses: updateFlat", () => {
 				},
 				{
 					id: 2,
-					courseId: 1,
 					order: 1,
 					parentId: 1,
 					contentId: 2,
@@ -819,7 +804,6 @@ describe("Courses: updateFlat", () => {
 				},
 				{
 					id: 3,
-					courseId: 1,
 					order: 2,
 					parentId: null,
 					contentId: 1,
@@ -828,7 +812,6 @@ describe("Courses: updateFlat", () => {
 				},
 				{
 					id: 4,
-					courseId: 1,
 					order: 0,
 					parentId: 3,
 					contentId: 2,
@@ -851,13 +834,125 @@ describe("Courses: updateFlat", () => {
 	});
 });
 
-// it("can insert content", async () => {
-// 	await db.insert(schema.contentItem).values({
-// 		title: "Test",
-// 		type: "lesson",
-// 		isPublished: true,
-// 		updatedAt: new Date(),
-// 	});
-// 	const results = await db.select().from(schema.contentItem);
-// 	expect(results.length).toBe(1);
-// });
+describe("Courses create", () => {
+	beforeEach(async () => {
+		// some content items
+		await db.insert(schema.contentItem).values([
+			{ title: "Lesson", type: "lesson", isPublished: true },
+			{ title: "File", type: "file", isPublished: true },
+		]);
+	});
+	it("fails if supplied incorrect input shape", async () => {
+		await expect(adapter.course.createFlat("hello")).rejects.toThrowError();
+		await expect(
+			adapter.course.createFlat({
+				userId: "asd",
+				title: "Test Course",
+				excerpt: "lorem ipsum...",
+				nodes: [
+					{
+						courseId: 1,
+						order: 0,
+						parentId: null,
+						contentId: 1,
+					},
+					{
+						courseId: 1,
+						order: 1,
+						parentId: null,
+						contentId: 2,
+					},
+					{
+						// to be deleted
+						courseId: 1,
+						order: 2,
+						parentId: null,
+						contentId: 1,
+					},
+				],
+			})
+		).rejects.toThrowError();
+	});
+	it("creates a new course and course_nodes", async () => {
+		const input: CreateCourseFlatNodesInput = {
+			userId: "asd",
+			title: "Test Course",
+			excerpt: "lorem ipsum...",
+			nodes: [
+				{
+					order: 0,
+					parentId: null,
+					contentId: 1,
+					clientId: "BHAFC",
+				},
+				{
+					order: 0,
+					parentId: null,
+					contentId: 2,
+					clientId: "CFC",
+					clientParentId: "BHAFC",
+				},
+				{
+					// to be deleted
+					order: 1,
+					parentId: null,
+					contentId: 1,
+					clientId: "MUFC",
+				},
+			],
+		};
+		await adapter.course.createFlat(input);
+	});
+});
+
+describe("Courses: getFlat", () => {
+	const existingCourse: Omit<CourseDTO, "id"> = {
+		userId: "asd",
+		title: "Test Course",
+		excerpt: "lorem ipsum...",
+	};
+
+	const existingNodes: CreateCourseNodeDTO[] = [
+		{
+			courseId: 1,
+			order: 0,
+			parentId: null,
+			contentId: 1,
+		},
+		{
+			courseId: 1,
+			order: 1,
+			parentId: null,
+			contentId: 2,
+		},
+		{
+			// to be deleted
+			courseId: 1,
+			order: 2,
+			parentId: null,
+			contentId: 1,
+		},
+	];
+	beforeEach(async () => {
+		// some content items
+		await db.insert(schema.contentItem).values([
+			{ title: "Lesson", type: "lesson", isPublished: true },
+			{ title: "File", type: "file", isPublished: true },
+		]);
+		// a course
+		await db.insert(schema.course).values(existingCourse);
+		// some existing course nodes
+		await db.insert(schema.courseNode).values(existingNodes);
+	});
+
+	it("returns a stored course", async () => {
+		const result = await adapter.course.getFlat(1);
+		console.log("result", result);
+		expect(result.nodes[0].order).toBe(0);
+	});
+
+	it("returns null when no course Id is found", async () => {
+		const result = await adapter.course.getFlat(2);
+		expect(result).toBe(null);
+	});
+});

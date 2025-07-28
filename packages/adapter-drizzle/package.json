@@ -19,7 +19,8 @@
 		"db:start": "docker run --rm -d -e POSTGRES_USER=test -e POSTGRES_PASSWORD=test -e POSTGRES_DB=courses_test -p 5433:5432 --name pg-test postgres:15",
 		"db:stop": "docker stop pg-test",
 		"wait-for-db": "tsx __tests__/wait-for-db.ts",
-		"test": "pnpm db:start && pnpm wait-for-db && vitest run && pnpm db:stop"
+        "test": "tsx scripts/run-tests.ts"
+
 	},
 	"dependencies": {
 		"pg": "^8.16.3",

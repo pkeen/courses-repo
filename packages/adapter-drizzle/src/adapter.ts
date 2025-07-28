@@ -11,6 +11,7 @@ import {
 	ContentType,
 	CourseDTO,
 	courseDTO,
+	CourseNodeDisplay,
 	CourseNodeUpsert,
 	CourseTreeDTO,
 	courseTreeDTO,
@@ -25,6 +26,8 @@ import {
 	EditCourseTreeDTO,
 	fullContentItem,
 	FullContentItem,
+	getCourseFlatOutput,
+	GetCourseFlatOutput,
 } from "@pete_keen/courses-core/validators";
 import { eq, inArray } from "drizzle-orm";
 import { assignClientIds, flattenCourseNodes } from "./utils";
@@ -223,12 +226,6 @@ const createCRUD = (
 					"Mutated update list with ids and parentIds added. toUpdate",
 					toUpdate
 				);
-
-				// 	await trx
-				// 		.update(courseNode)
-				// 		.set({ parentId: parentDbId })
-				// 		.where(eq(courseNode.id, dbId));
-				// }
 			}
 
 			// Update records
@@ -469,24 +466,94 @@ const createCRUD = (
 
 		const createFlat = async (input: CreateCourseFlatNodesInput) => {
 			// fail if input does not parse
-			const parsedInput = createCourseFlatNodesInput.parse(input);
+			try {
+				const parsedInput = createCourseFlatNodesInput.parse(input);
 
-			const [created] = await db
-				.insert(schema.course)
-				.values({
-					userId: input.userId,
-					title: input.title,
-					excerpt: input.excerpt,
-					isPublished: input.isPublished ?? false,
-					createdAt: new Date(),
-					updatedAt: new Date(),
-				})
-				.returning({ id: schema.course.id });
+				const [created] = await db
+					.insert(schema.course)
+					.values({
+						userId: input.userId,
+						title: input.title,
+						excerpt: input.excerpt,
+						isPublished: input.isPublished ?? false,
+						createdAt: new Date(),
+						updatedAt: new Date(),
+					})
+					.returning({ id: schema.course.id });
 
-			const courseId = created.id;
+				const courseId = created.id;
 
-			// Step 2: Sync the tree using clientId/clientParentId logic
-			await syncFlatCourseNodes(courseId, input.nodes);
+				// Step 2: Sync the tree using clientId/clientParentId logic
+				await syncFlatCourseNodes(courseId, input.nodes);
+			} catch (err) {
+				throw err;
+			}
+		};
+
+		const getFlat = async (
+			id: number
+		): Promise<GetCourseFlatOutput | null> => {
+			try {
+				// Get all in one query
+				const results = await db
+					.select({
+						course: schema.course,
+						courseNode: schema.courseNode,
+						contentItem: schema.contentItem,
+					})
+					.from(schema.course)
+					.leftJoin(
+						schema.courseNode,
+						eq(schema.course.id, schema.courseNode.courseId)
+					)
+					.orderBy(schema.courseNode.order)
+					.leftJoin(
+						schema.contentItem,
+						eq(schema.courseNode.contentId, schema.contentItem.id)
+					)
+					.where(eq(schema.course.id, id));
+
+				if (results.length === 0) return null;
+
+				const { course } = results[0];
+
+				const nodes = results
+					.map((r): CourseNodeDisplay | undefined => {
+						const { courseNode, contentItem } = r;
+						if (!courseNode) return undefined;
+
+						return {
+							id: courseNode.id,
+							parentId: courseNode.parentId ?? null,
+							order: courseNode.order,
+							contentId: courseNode.contentId,
+							clientId:
+								crypto.randomUUID() as `${string}-${string}-${string}-${string}-${string}`,
+							type: contentItem?.type ?? "module",
+							title: contentItem?.title ?? "(Untitled)",
+						};
+					})
+					.filter((n): n is CourseNodeDisplay => n !== undefined);
+
+				const parseResult = getCourseFlatOutput.safeParse({
+					...course,
+					nodes,
+				});
+
+				if (!parseResult.success) {
+					console.error(
+						"Validation error in GetCourseFlat:",
+						parseResult.error
+					);
+					throw new Error(
+						"Invalid course node structure or course details"
+					);
+				}
+
+				return parseResult.data;
+			} catch (err) {
+				return null;
+			}
 		};
 
 		return {
@@ -498,6 +565,7 @@ const createCRUD = (
 			syncFlatCourseNodes,
 			updateFlat,
 			createFlat,
+			getFlat,
 		};
 	};
 
