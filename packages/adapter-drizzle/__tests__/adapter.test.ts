@@ -956,3 +956,54 @@ describe("Courses: getFlat", () => {
 		expect(result).toBe(null);
 	});
 });
+
+describe("Courses: destroy", () => {
+	const existingCourse: Omit<CourseDTO, "id"> = {
+		userId: "asd",
+		title: "Test Course",
+		excerpt: "lorem ipsum...",
+	};
+
+	const existingNodes: CreateCourseNodeDTO[] = [
+		{
+			courseId: 1,
+			order: 0,
+			parentId: null,
+			contentId: 1,
+		},
+		{
+			courseId: 1,
+			order: 1,
+			parentId: null,
+			contentId: 2,
+		},
+		{
+			courseId: 1,
+			order: 2,
+			parentId: null,
+			contentId: 1,
+		},
+	];
+
+	beforeEach(async () => {
+		// some content items
+		await db.insert(schema.contentItem).values([
+			{ title: "Lesson", type: "lesson", isPublished: true },
+			{ title: "File", type: "file", isPublished: true },
+		]);
+		// a course
+		await db.insert(schema.course).values(existingCourse);
+		// some existing course nodes
+		await db.insert(schema.courseNode).values(existingNodes);
+	});
+
+	it("deletes a courses and all its nodes", async () => {
+		await adapter.course.destroy(1);
+
+		const nodes = await db.select().from(schema.courseNode);
+		const courses = await db.select().from(schema.course);
+
+		expect(nodes.length).toEqual(0);
+		expect(courses.length).toEqual(0);
+	});
+});
