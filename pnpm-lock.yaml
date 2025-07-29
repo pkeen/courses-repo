@@ -22,7 +22,7 @@ importers:
     dependencies:
       drizzle-orm:
         specifier: ^0.36.3
-        version: 0.36.4(@types/react@19.1.8)(react@19.1.0)
+        version: 0.36.4(@types/pg@8.15.4)(@types/react@19.1.8)(pg@8.16.3)(react@19.1.0)
       pg:
         specifier: ^8.16.3
         version: 8.16.3
@@ -100,6 +100,9 @@ importers:
       rollup:
         specifier: ^4.36.0
         version: 4.45.1
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@22.16.4)(jiti@2.4.2)(lightningcss@1.30.1)(sass@1.89.2)(tsx@4.20.3)
 
   packages/courses-ui:
     dependencies:
@@ -254,6 +257,9 @@ importers:
       tailwindcss:
         specifier: ^4.0.0
         version: 4.1.11
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@22.16.4)(jiti@2.4.2)(lightningcss@1.30.1)(sass@1.89.2)(tsx@4.20.3)
       zod:
         specifier: ^3.24.3
         version: 3.25.76
@@ -6513,11 +6519,6 @@ snapshots:
       '@types/pg': 8.15.4
       '@types/react': 19.1.8
       pg: 8.16.3
-      react: 19.1.0
-
-  drizzle-orm@0.36.4(@types/react@19.1.8)(react@19.1.0):
-    optionalDependencies:
-      '@types/react': 19.1.8
       react: 19.1.0
 
   electron-to-chromium@1.5.185: {}
