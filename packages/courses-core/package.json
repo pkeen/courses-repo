@@ -30,7 +30,7 @@
 	"scripts": {
 		"build": "rollup -c",
 		"dev": "rollup -c -w",
-		"test": "jest",
+		"test": "vitest run",
 		"types": "tsc --noEmit"
 	},
 	"dependencies": {
@@ -45,6 +45,7 @@
 		"@rollup/plugin-multi-entry": "^6.0.1",
 		"@rollup/plugin-node-resolve": "^15.3.0",
 		"@rollup/plugin-typescript": "^12.1.1",
-		"rollup": "^4.36.0"
+		"rollup": "^4.36.0",
+		"vitest": "^3.2.4"
 	}
 }

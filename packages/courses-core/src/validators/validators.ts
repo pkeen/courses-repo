@@ -78,6 +78,8 @@ export const courseTreeItem: z.ZodType<
 		children: z.array(courseTreeItem).default([]), // optional in input, always defined in output
 	})
 );
+// export type CourseTreeItem = z.infer<typeof courseTreeItem>
+
 export const courseTreeDTO = courseDTO.extend({
 	items: z.array(courseTreeItem).default([]),
 });
@@ -348,6 +350,7 @@ export const courseNodeDisplay = courseNodeDTO
 	})
 	.omit({ courseId: true });
 export type CourseNodeDisplay = z.infer<typeof courseNodeDisplay>;
+export type BackendNode = CourseNodeDisplay;
 
 export const getCourseFlatOutput = courseDTO.extend({
 	nodes: z.array(courseNodeDisplay).default([]),
