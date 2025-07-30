@@ -26,3 +26,5 @@ export const CourseManager = (dbAdapter: DBAdapter): CourseManager => {
 		content: dbAdapter.content,
 	};
 };
+
+export * from "./utilities";
