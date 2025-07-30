@@ -926,10 +926,10 @@ describe("Courses: getFlat", () => {
 			contentId: 2,
 		},
 		{
-			// to be deleted
+			// nested in 1
 			courseId: 1,
-			order: 2,
-			parentId: null,
+			order: 0,
+			parentId: 1,
 			contentId: 1,
 		},
 	];
@@ -945,14 +945,27 @@ describe("Courses: getFlat", () => {
 		await db.insert(schema.courseNode).values(existingNodes);
 	});
 
-	it("returns a stored course", async () => {
-		const result = await adapter.course.getFlat(1);
-		console.log("result", result);
+	it("returns a stored course in nested structure with no arguments", async () => {
+		const result = await adapter.course.get(1);
 		expect(result.nodes[0].order).toBe(0);
+		expect(result.structure).toBe("nested");
+		expect(result.nodes.length).toEqual(2);
+	});
+
+	it("returns a flat structure when advised to", async () => {
+		const result = await adapter.course.get(1, { structure: "flat" });
+		expect(result.structure).toBe("flat");
+		expect(result.nodes.length).toEqual(3);
+	});
+
+	it("returns a nested structure when advised to", async () => {
+		const result = await adapter.course.get(1, { structure: "nested" });
+		expect(result.structure).toBe("nested");
+		expect(result.nodes.length).toEqual(2);
 	});
 
 	it("returns null when no course Id is found", async () => {
-		const result = await adapter.course.getFlat(2);
+		const result = await adapter.course.get(2);
 		expect(result).toBe(null);
 	});
 });

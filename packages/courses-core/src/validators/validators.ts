@@ -379,14 +379,21 @@ export const nestedNode: z.ZodType<NestedNode, z.ZodTypeDef, NestedNode> =
 // ─────────────────────────────────────────────────────────────
 //  Discriminated response union  (optional, but nice to have)
 // ─────────────────────────────────────────────────────────────
+export const courseFlatResponse = courseDTO.extend({
+	structure: z.literal("flat"),
+	nodes: z.array(flatNode),
+});
+export type GetCourseFlat = z.infer<typeof courseFlatResponse>;
+
+export const courseNestedResponse = courseDTO.extend({
+	structure: z.literal("nested"),
+	nodes: z.array(nestedNode),
+});
+export type GetCourseNested = z.infer<typeof courseNestedResponse>;
+
 export const courseGetResponse = z.discriminatedUnion("structure", [
-	courseDTO.extend({
-		structure: z.literal("flat"),
-		nodes: z.array(flatNode),
-	}),
-	courseDTO.extend({
-		structure: z.literal("nested"),
-		nodes: z.array(nestedNode),
-	}),
+	courseFlatResponse,
+	courseNestedResponse,
 ]);
-export type CourseGetResponse = z.infer<typeof courseGetResponse>;
+export type GetCourseResponse = z.infer<typeof courseGetResponse>;
+

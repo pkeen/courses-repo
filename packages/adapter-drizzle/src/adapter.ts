@@ -31,6 +31,7 @@ import {
 } from "@pete_keen/courses-core/validators";
 import { eq, inArray } from "drizzle-orm";
 import { assignClientIds, flattenCourseNodes } from "./utils";
+import { buildTree } from "@pete_keen/courses-core";
 
 // const defaultSchema = createSchema();
 
@@ -251,43 +252,6 @@ const createCRUD = (
 			}
 		};
 
-		// const upsertNodeRecursive = async (
-		// 	node: CourseTreeItemUpsert,
-		// 	parentId: number | null,
-		// 	courseId: number
-		// ) => {
-		// 	if (node.id) {
-		// 		// Update
-		// 		await db
-		// 			.update(schema.courseNode)
-		// 			.set({
-		// 				order: node.order,
-		// 				parentId,
-		// 				contentId: node.contentId,
-		// 			})
-		// 			.where(eq(schema.courseNode.id, node.id));
-		// 	} else {
-		// 		// Create
-		// 		const inserted = await db
-		// 			.insert(schema.courseNode)
-		// 			.values({
-		// 				courseId,
-		// 				parentId,
-		// 				order: node.order,
-		// 				contentId: node.contentId,
-		// 			})
-		// 			.returning({ id: schema.courseNode.id });
-
-		// 		node.id = inserted[0].id; // so children can use it as parentId
-		// 	}
-
-		// 	if (node.children) {
-		// 		for (const child of node.children) {
-		// 			await upsertNodeRecursive(child, node.id, courseId);
-		// 		}
-		// 	}
-		// };
-
 		const list = async (): Promise<CourseDTO[]> => {
 			const results = await db.select().from(schema.course);
 			const parsed = courseDTO.array().safeParse(results);
@@ -297,78 +261,78 @@ const createCRUD = (
 			return parsed.data;
 		};
 
-		const get = async (id: number): Promise<CourseTreeDTO | null> => {
-			const results = await db
-				.select({
-					course: schema.course,
-					courseNode: schema.courseNode,
-					contentItem: schema.contentItem,
-				})
-				.from(schema.course)
-				.leftJoin(
-					schema.courseNode,
-					eq(schema.course.id, schema.courseNode.courseId)
-				)
-				.orderBy(schema.courseNode.order)
-				.leftJoin(
-					schema.contentItem,
-					eq(schema.courseNode.contentId, schema.contentItem.id)
-				)
-				.where(eq(schema.course.id, id));
+		// const oldGet = async (id: number): Promise<CourseTreeDTO | null> => {
+		// 	const results = await db
+		// 		.select({
+		// 			course: schema.course,
+		// 			courseNode: schema.courseNode,
+		// 			contentItem: schema.contentItem,
+		// 		})
+		// 		.from(schema.course)
+		// 		.leftJoin(
+		// 			schema.courseNode,
+		// 			eq(schema.course.id, schema.courseNode.courseId)
+		// 		)
+		// 		.orderBy(schema.courseNode.order)
+		// 		.leftJoin(
+		// 			schema.contentItem,
+		// 			eq(schema.courseNode.contentId, schema.contentItem.id)
+		// 		)
+		// 		.where(eq(schema.course.id, id));
 
-			if (results.length === 0) return null;
+		// 	if (results.length === 0) return null;
 
-			const { course } = results[0];
+		// 	const { course } = results[0];
 
-			// Step 1: flatten nodes
-			const flatItems = results
-				.filter((r) => r.courseNode && r.contentItem)
-				.map((r): CourseTreeItem => {
-					const courseNode = r.courseNode!;
-					const contentItem = r.contentItem!;
-					return {
-						id: courseNode.id,
-						type: contentItem.type,
-						title: contentItem.title,
-						order: courseNode.order,
-						contentId: courseNode.contentId,
-						isPublished: contentItem.isPublished,
-						clientId: "", // populate this if needed
-						collapsed: false, // or from DB if stored
-						children: [], // will be filled in next step
-						parentId: courseNode.parentId ?? null,
-					};
-				});
+		// 	// Step 1: flatten nodes
+		// 	const flatItems = results
+		// 		.filter((r) => r.courseNode && r.contentItem)
+		// 		.map((r): CourseTreeItem => {
+		// 			const courseNode = r.courseNode!;
+		// 			const contentItem = r.contentItem!;
+		// 			return {
+		// 				id: courseNode.id,
+		// 				type: contentItem.type,
+		// 				title: contentItem.title,
+		// 				order: courseNode.order,
+		// 				contentId: courseNode.contentId,
+		// 				isPublished: contentItem.isPublished,
+		// 				clientId: "", // populate this if needed
+		// 				collapsed: false, // or from DB if stored
+		// 				children: [], // will be filled in next step
+		// 				parentId: courseNode.parentId ?? null,
+		// 			};
+		// 		});
 
-			// Step 2: build tree
-			const nodeMap = new Map<number, CourseTreeItem>();
-			const roots: CourseTreeItem[] = [];
+		// 	// Step 2: build tree
+		// 	const nodeMap = new Map<number, CourseTreeItem>();
+		// 	const roots: CourseTreeItem[] = [];
 
-			for (const item of flatItems) {
-				nodeMap.set(item.id, item);
-			}
+		// 	for (const item of flatItems) {
+		// 		nodeMap.set(item.id, item);
+		// 	}
 
-			for (const item of flatItems) {
-				if (item.parentId && nodeMap.has(item.parentId)) {
-					nodeMap.get(item.parentId)!.children.push(item);
-				} else {
-					roots.push(item);
-				}
-			}
+		// 	for (const item of flatItems) {
+		// 		if (item.parentId && nodeMap.has(item.parentId)) {
+		// 			nodeMap.get(item.parentId)!.children.push(item);
+		// 		} else {
+		// 			roots.push(item);
+		// 		}
+		// 	}
 
-			assignClientIds(roots);
+		// 	assignClientIds(roots);
 
-			// Step 3: return CourseTree
-			const courseTree: CourseTreeDTO = {
-				...course,
-				items: roots,
-			};
+		// 	// Step 3: return CourseTree
+		// 	const courseTree: CourseTreeDTO = {
+		// 		...course,
+		// 		items: roots,
+		// 	};
 
-			// Optional: validate
-			courseTreeDTO.parse(courseTree);
+		// 	// Optional: validate
+		// 	courseTreeDTO.parse(courseTree);
 
-			return courseTree;
-		};
+		// 	return courseTree;
+		// };
 
 		const update = async (data: EditCourseTreeDTO) => {
 			try {
@@ -553,6 +517,27 @@ const createCRUD = (
 				return parseResult.data;
 			} catch (err) {
 				return null;
+			}
+		};
+
+		const get = async (
+			id: number,
+			opts?: { structure: "nested" | "flat" }
+		) => {
+			const flatCourse = await getFlat(id);
+			if (!flatCourse) return null;
+
+			if (opts?.structure === "flat") {
+				return {
+					...flatCourse,
+					structure: "flat",
+				};
+			} else {
+				return {
+					...flatCourse,
+					structure: "nested",
+					nodes: buildTree(flatCourse.nodes),
+				};
 			}
 		};
 
