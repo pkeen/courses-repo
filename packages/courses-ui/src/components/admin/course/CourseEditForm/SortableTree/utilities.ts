@@ -1,5 +1,6 @@
 "use client";
 
+import { UpsertNestedNode } from "@pete_keen/courses-core/validators";
 import { CourseTreeItem, FlattenedCourseTreeItem } from "./components/types";
 import { arrayMove } from "@dnd-kit/sortable";
 
@@ -24,9 +25,13 @@ export function flattenTree(
 }
 
 export const iOS = /iPad|iPhone|iPod/.test(navigator.platform);
+// Added isIOS bc was breaking on ssr
+export const isIOS = (): boolean =>
+	typeof navigator !== "undefined" &&
+	/iPad|iPhone|iPod/.test(navigator.platform);
 
-export function removeItem(items: CourseTreeItem[], clientId: string) {
-	const newItems: CourseTreeItem[] = [];
+export function removeItem(items: UpsertNestedNode[], clientId: string) {
+	const newItems: UpsertNestedNode[] = [];
 
 	for (const item of items) {
 		if (item.clientId === clientId) {
@@ -295,8 +300,8 @@ export function assignSiblingOrder(
 
 export function buildTree(
 	flattenedItems: FlattenedCourseTreeItem[]
-): CourseTreeItem[] {
-	const root: CourseTreeItem = {
+): UpsertNestedNode[] {
+	const root: UpsertNestedNode = {
 		clientId: "root",
 		children: [],
 		id: 0,
@@ -307,7 +312,7 @@ export function buildTree(
 		parentId: null,
 		isPublished: true,
 	};
-	const nodes: Record<string, CourseTreeItem> = { [root.clientId]: root };
+	const nodes: Record<string, UpsertNestedNode> = { [root.clientId]: root };
 	// Clone and register all nodes
 	for (const item of flattenedItems) {
 		nodes[item.clientId] = {

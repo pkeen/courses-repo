@@ -29,6 +29,7 @@ import {
 	CourseDTO,
 	CreateCourseNodeDTO,
 	EditCourseFlatNodesInput,
+	CourseCreateInputFlat,
 } from "@pete_keen/courses-core/validators";
 import { afterEach } from "vitest";
 
@@ -834,7 +835,7 @@ describe("Courses: updateFlat", () => {
 	});
 });
 
-describe("Courses create", () => {
+describe("Courses: createFlat", () => {
 	beforeEach(async () => {
 		// some content items
 		await db.insert(schema.contentItem).values([
@@ -905,7 +906,63 @@ describe("Courses create", () => {
 	});
 });
 
-describe("Courses: getFlat", () => {
+describe("Courses: create", () => {
+	beforeEach(async () => {
+		// some content items
+		await db.insert(schema.contentItem).values([
+			{ title: "Lesson", type: "lesson", isPublished: true },
+			{ title: "File", type: "file", isPublished: true },
+		]);
+	});
+	afterEach(async () => {
+		await resetTables(db, tablesArray);
+	});
+	it("fails with wrong input type", async () => {
+		await expect(adapter.course.create("hello")).rejects.toThrowError();
+	});
+	it("it works when supplied a flat structure", async () => {
+		const input: CourseCreateInputFlat = {
+			title: "test course",
+			excerpt: "asdfjsdklfjsdf",
+			userId: "11111",
+			structure: "flat",
+			nodes: [
+				{
+					order: 0,
+					parentId: null,
+					contentId: 1,
+					clientId: "BHAFC",
+				},
+				{
+					order: 0,
+					parentId: null,
+					contentId: 2,
+					clientId: "CFC",
+					clientParentId: "BHAFC",
+				},
+				{
+					// to be deleted
+					order: 1,
+					parentId: null,
+					contentId: 1,
+					clientId: "MUFC",
+				},
+			],
+		};
+
+		await adapter.course.create(input);
+
+		const [course] = await db.select().from(schema.course);
+
+		expect(course.title).toBe("test course");
+
+		const nodes = await db.select().from(schema.courseNode);
+
+		expect(nodes.length).toEqual(3);
+	});
+});
+
+describe("Courses: get", () => {
 	const existingCourse: Omit<CourseDTO, "id"> = {
 		userId: "asd",
 		title: "Test Course",
@@ -947,6 +1004,7 @@ describe("Courses: getFlat", () => {
 
 	it("returns a stored course in nested structure with no arguments", async () => {
 		const result = await adapter.course.get(1);
+		console.log(result);
 		expect(result.nodes[0].order).toBe(0);
 		expect(result.structure).toBe("nested");
 		expect(result.nodes.length).toEqual(2);

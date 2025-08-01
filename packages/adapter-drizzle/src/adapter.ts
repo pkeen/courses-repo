@@ -9,6 +9,8 @@ import {
 	contentItemDTO,
 	ContentItemDTO,
 	ContentType,
+	courseCreateUnionInput,
+	CourseCreateUnionInput,
 	CourseDTO,
 	courseDTO,
 	CourseNodeDisplay,
@@ -396,37 +398,37 @@ const createCRUD = (
 				.where(eq(schema.course.id, courseId));
 		};
 
-		const create = async (
-			data: CreateCourseTreeDTO
-		): Promise<CourseTreeDTO> => {
-			try {
-				// Step 1: Insert course
-				const [created] = await db
-					.insert(schema.course)
-					.values({
-						userId: data.userId,
-						title: data.title,
-						excerpt: data.excerpt,
-						isPublished: data.isPublished ?? false,
-						createdAt: new Date(),
-						updatedAt: new Date(),
-					})
-					.returning({ id: schema.course.id });
+		// const create = async (
+		// 	data: CreateCourseTreeDTO
+		// ): Promise<CourseTreeDTO> => {
+		// 	try {
+		// 		// Step 1: Insert course
+		// 		const [created] = await db
+		// 			.insert(schema.course)
+		// 			.values({
+		// 				userId: data.userId,
+		// 				title: data.title,
+		// 				excerpt: data.excerpt,
+		// 				isPublished: data.isPublished ?? false,
+		// 				createdAt: new Date(),
+		// 				updatedAt: new Date(),
+		// 			})
+		// 			.returning({ id: schema.course.id });
 
-				const courseId = created.id;
+		// 		const courseId = created.id;
 
-				// Step 2: Sync tree (all inserts)
-				await syncCourseTree(courseId, data.items);
+		// 		// Step 2: Sync tree (all inserts)
+		// 		await syncCourseTree(courseId, data.items);
 
-				const course = await get(courseId);
-				if (!course) {
-					throw new Error("Failed to create course");
-				}
-				return course;
-			} catch (error) {
-				throw error;
-			}
-		};
+		// 		const course = await get(courseId);
+		// 		if (!course) {
+		// 			throw new Error("Failed to create course");
+		// 		}
+		// 		return course;
+		// 	} catch (error) {
+		// 		throw error;
+		// 	}
+		// };
 
 		const createFlat = async (input: CreateCourseFlatNodesInput) => {
 			// fail if input does not parse
@@ -449,6 +451,21 @@ const createCRUD = (
 
 				// Step 2: Sync the tree using clientId/clientParentId logic
 				await syncFlatCourseNodes(courseId, input.nodes);
+			} catch (err) {
+				throw err;
+			}
+		};
+
+		const create = async (input: CourseCreateUnionInput) => {
+			try {
+				const parsedInput = courseCreateUnionInput.parse(input);
+
+				if (input.structure === "nested") {
+					// TODO: flatten nodes function
+					console.log("flatten the nodes");
+				} else {
+					await createFlat(parsedInput);
+				}
 			} catch (err) {
 				throw err;
 			}

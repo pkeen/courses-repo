@@ -11,6 +11,7 @@ const input: BackendNode[] = [
 		clientId: "sub",
 		type: "lesson",
 		title: "lesson 1",
+		isPublished: true,
 	},
 	{
 		id: 1,
@@ -20,6 +21,7 @@ const input: BackendNode[] = [
 		clientId: "sandwich",
 		type: "module",
 		title: "module 1",
+		isPublished: true,
 	},
 	{
 		id: 2,
@@ -29,6 +31,7 @@ const input: BackendNode[] = [
 		clientId: "burger",
 		type: "module",
 		title: "module 2",
+		isPublished: false,
 	},
 ];
 

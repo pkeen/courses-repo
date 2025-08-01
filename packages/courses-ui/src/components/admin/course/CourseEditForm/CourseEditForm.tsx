@@ -25,9 +25,11 @@ import { AddContentDialog } from "./AddContentDialog";
 import { SelectExistingContentDialog } from "./SelectExistingContentDialog";
 import {
 	ContentItemDTO,
-	EditCourseTreeDTO,
-	editCourseTreeDTO,
 	CourseTreeItemUpsert,
+	courseUpdateInputNested,
+	CourseUpdateNestedInput,
+	CourseGetNested,
+	UpsertNestedNode,
 } from "@pete_keen/courses-core/validators";
 import { Textarea } from "components/ui/textarea";
 // import { courseDisplayToUi } from "./course-display-to-ui";
@@ -38,14 +40,14 @@ export function CourseEditForm({
 	onSubmit,
 	onDelete,
 }: {
-	course: EditCourseTreeDTO;
+	course: CourseUpdateNestedInput;
 	existingContent: ContentItemDTO[];
-	onSubmit: (values: EditCourseTreeDTO) => Promise<EditCourseTreeDTO>;
+	onSubmit: (values: CourseUpdateNestedInput) => Promise<CourseGetNested>;
 	onDelete: (id: number) => Promise<void>;
 	// fetchModuleTree: (moduleId: number) => Promise<ModuleTreeDTO | null>;
 }) {
 	const form = useForm({
-		resolver: zodResolver(editCourseTreeDTO),
+		resolver: zodResolver(courseUpdateInputNested),
 		defaultValues: course,
 	});
 	// 🟣 1. Build a *stable* clientId without randomness
@@ -61,11 +63,11 @@ export function CourseEditForm({
 
 	const { fields, append, move } = useFieldArray({
 		control: form.control,
-		name: "items",
+		name: "nodes",
 		keyName: "fieldId", // anything except “id”
 	});
 
-	const handleSubmit = (values: EditCourseTreeDTO) => {
+	const handleSubmit = (values: CourseUpdateNestedInput) => {
 		console.log(values);
 		startTransition(async () => {
 			try {
@@ -182,19 +184,17 @@ export function CourseEditForm({
 								onOpenChange={setSelectContentOpen}
 								items={existingContent}
 								onSelect={async (item) => {
-									const courseTreeItem: CourseTreeItemUpsert =
-										{
-											id: undefined,
-											clientId: `new-${fields.length}`,
-											contentId: item.id,
-											order: fields.length,
-											parentId: null,
-											title: item.title,
-											isPublished:
-												item.isPublished ?? false,
-											type: item.type,
-											children: [],
-										};
+									const courseTreeItem: UpsertNestedNode = {
+										id: undefined,
+										clientId: `new-${fields.length}`,
+										contentId: item.id,
+										order: fields.length,
+										parentId: null,
+										title: item.title,
+										isPublished: item.isPublished ?? false,
+										type: item.type,
+										children: [],
+									};
 
 									append(courseTreeItem);
 
@@ -204,7 +204,7 @@ export function CourseEditForm({
 						</div>
 						<Controller
 							control={form.control}
-							name="items"
+							name="nodes"
 							render={({ field }) => (
 								<SortableTree
 									items={field.value ?? []}

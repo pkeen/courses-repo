@@ -18,8 +18,8 @@ import type { RefObject } from "react";
 
 /// New Types
 export type CourseTreeItem = {
-	id: number;
-	type: "module" | "lesson" | "quiz" | "file";
+	id?: number;
+	type: "module" | "lesson" | "quiz" | "file" | "video";
 	title: string;
 	order: number;
 	contentId: number;

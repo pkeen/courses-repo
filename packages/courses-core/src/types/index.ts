@@ -19,8 +19,9 @@ import {
 	EditCourseFlatNodesInput,
 	GetCourseFlatOutput,
 	CourseNodeUpsert,
-	GetCourseNested,
 	GetCourseResponse,
+	CourseGetNested,
+	CourseCreateUnionInput,
 } from "validators";
 
 export {
@@ -52,22 +53,22 @@ interface CRUDOperations<G, C, E, L> {
 
 export interface CourseCRUD
 	extends CRUDOperations<
-		GetCourseNested,
-		CreateCourseTreeDTO,
+		CourseGetNested,
+		CourseCreateUnionInput,
 		EditCourseTreeDTO,
 		CourseDTO
 	> {
 	// ── overloaded get ─────────────────────────────────────────────
 	/** original one-arg version -- keeps us compatible with the base */
-	get(id: number): Promise<GetCourseNested | null>;
+	get(id: number): Promise<CourseGetNested | null>;
 	get(
 		id: number,
 		opts: { structure: "flat" }
-	): Promise<GetCourseFlatOutput | null>;
+	): Promise<CourseGetNested | null>;
 	get(
 		id: number,
 		opts: { structure: "nested" }
-	): Promise<GetCourseNested | null>;
+	): Promise<CourseGetNested | null>;
 
 	// implementation signature (broadest ⇢ no compile error)
 	get(

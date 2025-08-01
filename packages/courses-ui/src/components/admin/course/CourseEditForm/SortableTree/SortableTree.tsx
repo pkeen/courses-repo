@@ -45,12 +45,13 @@ import {
 } from "@dnd-kit/sortable";
 import { SortableTreeItem } from "./components";
 import { createPortal } from "react-dom";
+import { UpsertNestedNode } from "@pete_keen/courses-core/validators";
 
 interface Props {
 	collapsible?: boolean;
 	// initialItems?: CourseTreeItem[];
-	items: CourseTreeItem[];
-	onChange: (items: CourseTreeItem[]) => void;
+	items: UpsertNestedNode[];
+	onChange: (items: UpsertNestedNode[]) => void;
 	indentationWidth?: number;
 	indicator?: boolean;
 	removable?: boolean;
@@ -97,7 +98,7 @@ export function SortableTree({
 	});
 
 	const sortedIds = useMemo(
-		() => flattenedItems.map(({ clientId }) => clientId), 
+		() => flattenedItems.map(({ clientId }) => clientId),
 		[flattenedItems]
 	);
 

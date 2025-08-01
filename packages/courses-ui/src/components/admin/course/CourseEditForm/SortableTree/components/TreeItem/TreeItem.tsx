@@ -9,6 +9,7 @@ import { Remove } from "./Remove";
 import styles from "./TreeItem.module.css";
 import { Action } from "./Action";
 import { TypeIcon } from "./TypeIcon";
+import { ContentType } from "@pete_keen/courses-core/validators";
 
 export interface Props extends HTMLAttributes<HTMLLIElement> {
 	childCount?: number;
@@ -26,7 +27,7 @@ export interface Props extends HTMLAttributes<HTMLLIElement> {
 	onRemove?(): void;
 	wrapperRef?(node: HTMLLIElement): void;
 	title: string;
-	type: "module" | "lesson" | "quiz" | "file";
+	type: ContentType;
 	// ref: Ref<HTMLDivElement>;
 }
 
