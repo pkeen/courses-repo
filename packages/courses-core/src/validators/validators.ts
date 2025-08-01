@@ -366,7 +366,7 @@ export const flatNode = courseNodeDisplay.extend({
 });
 export type FlatNode = z.infer<typeof flatNode>;
 
-type NestedNode = BaseNode & {
+export type NestedNode = BaseNode & {
 	children: NestedNode[];
 };
 
@@ -448,25 +448,25 @@ export const courseCreateUnionInput = z.discriminatedUnion("structure", [
 export type CourseCreateUnionInput = z.infer<typeof courseCreateUnionInput>;
 
 /*
- * Create Course Nodes
+ * Edit Course Nodes
  */
 
 export const upsertBaseNode = createCourseNodeDTO
 	.extend({
 		clientId: z.string(),
 		clientParentId: z.string().optional().nullable(),
-		type: contentType,
+		type: contentType.optional(),
 		isPublished: z.boolean().optional(),
-		title: z.string(),
+		title: z.string().optional(),
 		id: z.number().optional(),
 	})
 	.omit({ courseId: true });
 export type UpsertBaseNode = z.infer<typeof upsertBaseNode>;
 
-export const upsertFlatNode = courseNodeDisplay.extend({
-	children: z.never(),
+export const upsertFlatNode = upsertBaseNode.extend({
+	children: z.never().optional(),
 });
-export type UpsertFlatNode = z.infer<typeof flatNode>;
+export type UpsertFlatNode = z.infer<typeof upsertFlatNode>;
 
 export type UpsertNestedNode = UpsertBaseNode & {
 	children: UpsertNestedNode[];

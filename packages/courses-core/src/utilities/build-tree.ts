@@ -1,14 +1,14 @@
-import { CourseTreeItem, BackendNode } from "validators";
+import { CourseTreeItem, BackendNode, NestedNode } from "validators";
 
-export function buildTree(nodes: BackendNode[]): CourseTreeItem[] {
+export function buildTree(nodes: BackendNode[]): NestedNode[] {
 	// STEP 1 – create lookup with empty children
-	const table = new Map<number, CourseTreeItem>();
+	const table = new Map<number, NestedNode>();
 	nodes.forEach(
 		(n) => table.set(n.id, { ...n, children: [] }) // spread keeps type safety
 	);
 
 	// STEP 2 – wire up parent → children
-	const roots: CourseTreeItem[] = [];
+	const roots: NestedNode[] = [];
 	table.forEach((node) => {
 		if (node.parentId == null) {
 			roots.push(node);
