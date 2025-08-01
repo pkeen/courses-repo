@@ -1,5 +1,5 @@
-import { buildTree } from "../../src/utilities/build-tree";
-import { BackendNode, courseTreeItem } from "../../src/validators";
+import { buildTree } from "../../utilities/build-tree";
+import { BackendNode, courseTreeItem } from "../../validators";
 import { describe, it, expect, test } from "vitest";
 import z from "zod";
 

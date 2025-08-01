@@ -1,10 +1,10 @@
-import { flattenTree } from "../../src/utilities";
+import { flattenTree } from "../../utilities";
 import {
 	UpsertBaseNode,
 	UpsertNestedNode,
 	UpsertFlatNode,
 	upsertFlatNode,
-} from "../../src/validators";
+} from "../../validators";
 import { describe, expect, it } from "vitest";
 
 describe("flatten tree", () => {
