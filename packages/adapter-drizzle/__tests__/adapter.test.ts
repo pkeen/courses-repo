@@ -24,13 +24,12 @@ import {
 	createCourseTreeDTO,
 	editCourseTreeDTO,
 	EditCourseTreeDTO,
-	CreateCourseFlatNodesInput,
-	CourseNodeUpsert,
 	CourseDTO,
 	CreateCourseNodeDTO,
-	EditCourseFlatNodesInput,
 	CourseCreateInputFlat,
 	CourseCreateNestedInput,
+	CourseUpdateInputFlat,
+	UpsertFlatNode,
 } from "@pete_keen/courses-core/validators";
 import { afterEach } from "vitest";
 
@@ -459,7 +458,7 @@ describe("syncFlatCourseNodes: ", () => {
 		},
 	];
 
-	const input: CourseNodeUpsert[] = [
+	const input: UpsertFlatNode[] = [
 		{
 			// New node
 			order: 1,
@@ -635,15 +634,12 @@ describe("Courses: updateFlat", () => {
 		await resetTables(db, tablesArray);
 	});
 
-	it("fails if supplied incorrect input shape", async () => {
-		await expect(adapter.course.updateFlat("hello")).rejects.toThrowError();
-	});
-
 	it("updates course details while leaving nodes remain unchanged", async () => {
-		const input: EditCourseFlatNodesInput = {
+		const input: CourseUpdateInputFlat = {
 			...existingCourse,
 			id: 1,
 			title: "Edited Course Title",
+			structure: "flat",
 			nodes: [
 				{
 					id: 1,
@@ -687,9 +683,10 @@ describe("Courses: updateFlat", () => {
 	});
 
 	it("updates node order", async () => {
-		const input: EditCourseFlatNodesInput = {
+		const input: CourseUpdateInputFlat = {
 			...existingCourse,
 			id: 1,
+			structure: "flat",
 			nodes: [
 				{
 					id: 1,
@@ -731,9 +728,10 @@ describe("Courses: updateFlat", () => {
 
 	it("renests nodes", async () => {
 		// this test swaps nesting placing previously unested elements inside each other
-		const input: EditCourseFlatNodesInput = {
+		const input: CourseUpdateInputFlat = {
 			...existingCourse,
 			id: 1,
+			structure: "flat",
 			nodes: [
 				{
 					id: 4,
@@ -778,9 +776,10 @@ describe("Courses: updateFlat", () => {
 	});
 
 	it("renests nodes under new nodes", async () => {
-		const input: EditCourseFlatNodesInput = {
+		const input: CourseUpdateInputFlat = {
 			...existingCourse,
 			id: 1,
+			structure: "flat",
 			title: "Edited Course Title",
 			nodes: [
 				{
@@ -836,6 +835,117 @@ describe("Courses: updateFlat", () => {
 	});
 });
 
+describe("Courses: update", () => {
+	const existingCourse: Omit<CourseDTO, "id"> = {
+		userId: "11111",
+		title: "Test Course",
+		excerpt: "lorem ipsum...",
+	};
+
+	const existingNodes: CreateCourseNodeDTO[] = [
+		{
+			courseId: 1,
+			order: 0,
+			parentId: null,
+			contentId: 1,
+		},
+		{
+			courseId: 1,
+			order: 1,
+			parentId: null,
+			contentId: 2,
+		},
+		{
+			courseId: 1,
+			order: 2,
+			parentId: null,
+			contentId: 1,
+		},
+		{
+			courseId: 1,
+			order: 0,
+			parentId: 3,
+			contentId: 2,
+		},
+	];
+
+	beforeEach(async () => {
+		// some content items
+		await db.insert(schema.contentItem).values([
+			{ title: "Lesson", type: "lesson", isPublished: true },
+			{ title: "File", type: "file", isPublished: true },
+		]);
+		// a course
+		await db.insert(schema.course).values(existingCourse);
+		// some existing course nodes
+		await db.insert(schema.courseNode).values(existingNodes);
+	});
+
+	afterEach(async () => {
+		await resetTables(db, tablesArray);
+	});
+
+	it("fails if supplied incorrect input shape", async () => {
+		await expect(adapter.course.update("hello")).rejects.toThrowError();
+	});
+
+	it("updates nodes when supplied a flat input shape", async () => {
+		const input: CourseUpdateInputFlat = {
+			id: 1,
+			title: "test course",
+			excerpt: "asdfjsdklfjsdf",
+			userId: "11111",
+			structure: "flat",
+			isPublished: true,
+			nodes: [
+				{
+					id: 1,
+					order: 0,
+					parentId: null,
+					contentId: 1,
+					clientId: "BHAFC",
+				},
+				{
+					order: 0,
+					parentId: null,
+					contentId: 2,
+					clientId: "CFC",
+					clientParentId: "BHAFC",
+				},
+				{
+					// to be deleted
+					order: 1,
+					parentId: null,
+					contentId: 1,
+					clientId: "MUFC",
+				},
+			],
+		};
+		await adapter.course.update(input);
+
+		const [queryCourse] = await db.select().from(schema.course);
+		const queryNodes = await db.select().from(schema.courseNode);
+
+		const { nodes: inputNodes, ...inputCourse } = input;
+
+		// reformat nodes to equal each other in fields
+		const cleanedQueryNodes = queryNodes.map(
+			({ courseId, id, ...rest }) => rest
+		);
+
+		const cleanedInputNodes = inputNodes.map(
+			({ clientId, clientParentId, id, ...rest }) => rest
+		);
+
+		expect(cleanedQueryNodes).toEqual(cleanedInputNodes);
+
+		const { structure, ...cleanedInputCourse } = inputCourse;
+		const { createdAt, updatedAt, ...cleanedQueryCourse } = queryCourse;
+
+		expect(cleanedQueryCourse).toEqual(cleanedInputCourse);
+	});
+});
+
 describe("Courses: createFlat", () => {
 	beforeEach(async () => {
 		// some content items
@@ -844,42 +954,43 @@ describe("Courses: createFlat", () => {
 			{ title: "File", type: "file", isPublished: true },
 		]);
 	});
-	it("fails if supplied incorrect input shape", async () => {
-		await expect(adapter.course.createFlat("hello")).rejects.toThrowError();
-		await expect(
-			adapter.course.createFlat({
-				userId: "asd",
-				title: "Test Course",
-				excerpt: "lorem ipsum...",
-				nodes: [
-					{
-						courseId: 1,
-						order: 0,
-						parentId: null,
-						contentId: 1,
-					},
-					{
-						courseId: 1,
-						order: 1,
-						parentId: null,
-						contentId: 2,
-					},
-					{
-						// to be deleted
-						courseId: 1,
-						order: 2,
-						parentId: null,
-						contentId: 1,
-					},
-				],
-			})
-		).rejects.toThrowError();
-	});
+	// it("fails if supplied incorrect input shape", async () => {
+	// 	await expect(adapter.course.createFlat("hello")).rejects.toThrowError();
+	// 	await expect(
+	// 		adapter.course.createFlat({
+	// 			userId: "asd",
+	// 			title: "Test Course",
+	// 			excerpt: "lorem ipsum...",
+	// 			nodes: [
+	// 				{
+	// 					courseId: 1,
+	// 					order: 0,
+	// 					parentId: null,
+	// 					contentId: 1,
+	// 				},
+	// 				{
+	// 					courseId: 1,
+	// 					order: 1,
+	// 					parentId: null,
+	// 					contentId: 2,
+	// 				},
+	// 				{
+	// 					// to be deleted
+	// 					courseId: 1,
+	// 					order: 2,
+	// 					parentId: null,
+	// 					contentId: 1,
+	// 				},
+	// 			],
+	// 		})
+	// 	).rejects.toThrowError();
+	// });
 	it("creates a new course and course_nodes", async () => {
-		const input: CreateCourseFlatNodesInput = {
+		const input: CourseCreateInputFlat = {
 			userId: "asd",
 			title: "Test Course",
 			excerpt: "lorem ipsum...",
+			structure: "flat",
 			nodes: [
 				{
 					order: 0,
@@ -918,8 +1029,39 @@ describe("Courses: create", () => {
 	afterEach(async () => {
 		await resetTables(db, tablesArray);
 	});
-	it("fails with wrong input type", async () => {
+	// it("fails with wrong input type", async () => {
+	// 	await expect(adapter.course.create("hello")).rejects.toThrowError();
+	// });
+	it("fails if supplied incorrect input shape", async () => {
 		await expect(adapter.course.create("hello")).rejects.toThrowError();
+		await expect(
+			adapter.course.create({
+				userId: "asd",
+				title: "Test Course",
+				excerpt: "lorem ipsum...",
+				nodes: [
+					{
+						courseId: 1,
+						order: 0,
+						parentId: null,
+						contentId: 1,
+					},
+					{
+						courseId: 1,
+						order: 1,
+						parentId: null,
+						contentId: 2,
+					},
+					{
+						// to be deleted
+						courseId: 1,
+						order: 2,
+						parentId: null,
+						contentId: 1,
+					},
+				],
+			})
+		).rejects.toThrowError();
 	});
 	it("works when supplied a flat structure", async () => {
 		const input: CourseCreateInputFlat = {

@@ -311,34 +311,34 @@ export type CreateFullContentItem = z.infer<typeof createFullContentItem>;
 
 // Something like
 
-export const courseNodeUpsert = z.object({
-	id: z.number().optional(),
-	parentId: z.number().optional().nullable(),
-	clientId: z.string(),
-	clientParentId: z.string().optional(), // For new items with a new parent
-	order: z.number(),
-	contentId: z.number(),
-});
-export type CourseNodeUpsert = z.infer<typeof courseNodeUpsert>;
+// export const courseNodeUpsert = z.object({
+// 	id: z.number().optional(),
+// 	parentId: z.number().optional().nullable(),
+// 	clientId: z.string(),
+// 	clientParentId: z.string().optional(), // For new items with a new parent
+// 	order: z.number(),
+// 	contentId: z.number(),
+// });
+// export type CourseNodeUpsert = z.infer<typeof courseNodeUpsert>;
 
-export const createCourseFlatNodesInput = z.object({
-	userId: z.string(),
-	title: z.string(),
-	excerpt: z.string(),
-	isPublished: z.boolean().optional(),
-	createdAt: z.date().optional(),
-	updatedAt: z.date().optional(),
-	nodes: z.array(courseNodeUpsert).default([]),
-});
+// export const createCourseFlatNodesInput = z.object({
+// 	userId: z.string(),
+// 	title: z.string(),
+// 	excerpt: z.string(),
+// 	isPublished: z.boolean().optional(),
+// 	createdAt: z.date().optional(),
+// 	updatedAt: z.date().optional(),
+// 	nodes: z.array(courseNodeUpsert).default([]),
+// });
 
-export type CreateCourseFlatNodesInput = z.infer<
-	typeof createCourseFlatNodesInput
->;
+// export type CreateCourseFlatNodesInput = z.infer<
+// 	typeof createCourseFlatNodesInput
+// >;
 
-export const editCourseFlatNodesInput = createCourseFlatNodesInput.extend({
-	id: z.number(),
-});
-export type EditCourseFlatNodesInput = z.infer<typeof editCourseFlatNodesInput>;
+// export const editCourseFlatNodesInput = createCourseFlatNodesInput.extend({
+// 	id: z.number(),
+// });
+// export type EditCourseFlatNodesInput = z.infer<typeof editCourseFlatNodesInput>;
 
 // courseNode expanded for GET
 export const courseNodeDisplay = courseNodeDTO
@@ -358,10 +358,17 @@ export const getCourseFlatOutput = courseDTO.extend({
 });
 export type GetCourseFlatOutput = z.infer<typeof getCourseFlatOutput>;
 
-export const baseNode = courseNodeDisplay;
-export type BaseNode = CourseNodeDisplay;
+export const getBaseNode = courseNodeDTO
+	.extend({
+		clientId: z.string(),
+		type: contentType,
+		title: z.string(),
+		isPublished: z.boolean().optional(),
+	})
+	.omit({ courseId: true });
+export type BaseNode = z.infer<typeof getBaseNode>;
 
-export const flatNode = courseNodeDisplay.extend({
+export const flatNode = getBaseNode.extend({
 	children: z.never(),
 });
 export type FlatNode = z.infer<typeof flatNode>;
@@ -372,7 +379,7 @@ export type NestedNode = BaseNode & {
 
 export const nestedNode: z.ZodType<NestedNode, z.ZodTypeDef, NestedNode> =
 	z.lazy(() =>
-		baseNode.extend({
+		getBaseNode.extend({
 			children: z.array(nestedNode),
 		})
 	);
@@ -488,8 +495,19 @@ export const courseUpdateInputFlat = courseDTO.extend({
 });
 export type CourseUpdateInputFlat = z.infer<typeof courseUpdateInputFlat>;
 
+// export const courseUpdateInputFlatBase = courseUpdateInputFlat.omit({
+// 	structure: true,
+// });
+// export type CourseUpdateInputFlatBase 
+
 export const courseUpdateInputNested = courseDTO.extend({
 	structure: z.literal("nested"),
 	nodes: z.array(upsertNestedNode),
 });
 export type CourseUpdateNestedInput = z.infer<typeof courseUpdateInputNested>;
+
+export const courseUpdateUnionInput = z.discriminatedUnion("structure", [
+	courseUpdateInputNested,
+	courseUpdateInputFlat,
+]);
+export type CourseUpdateUnionInput = z.infer<typeof courseUpdateUnionInput>;

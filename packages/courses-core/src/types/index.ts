@@ -15,13 +15,17 @@ import {
 	FullContentItem,
 	EditFullContentItem,
 	CreateFullContentItem,
-	CreateCourseFlatNodesInput,
-	EditCourseFlatNodesInput,
+	// CreateCourseFlatNodesInput,
+	// EditCourseFlatNodesInput,
 	GetCourseFlatOutput,
-	CourseNodeUpsert,
+	// CourseNodeUpsert,
 	GetCourseResponse,
 	CourseGetNested,
 	CourseCreateUnionInput,
+	CourseUpdateUnionInput,
+	CourseCreateInputFlat,
+	CourseUpdateInputFlat,
+	UpsertFlatNode,
 } from "validators";
 
 export {
@@ -55,7 +59,7 @@ export interface CourseCRUD
 	extends CRUDOperations<
 		CourseGetNested,
 		CourseCreateUnionInput,
-		EditCourseTreeDTO,
+		CourseUpdateUnionInput,
 		CourseDTO
 	> {
 	// ── overloaded get ─────────────────────────────────────────────
@@ -75,12 +79,12 @@ export interface CourseCRUD
 		id: number,
 		opts: { structure: "flat" | "nested" }
 	): Promise<GetCourseFlatOutput | GetCourseResponse | null>;
-	createFlat: (input: CreateCourseFlatNodesInput) => Promise<void>;
-	updateFlat: (input: EditCourseFlatNodesInput) => Promise<void>;
+	createFlat: (input: CourseCreateInputFlat) => Promise<void>;
+	updateFlat: (input: CourseUpdateInputFlat) => Promise<void>;
 	// getFlat: (id: number) => Promise<GetCourseFlatOutput | null>;
 	syncFlatCourseNodes: (
 		courseId: number,
-		input: CourseNodeUpsert
+		input: UpsertFlatNode[]
 	) => Promise<void>;
 }
 // export interface LessonCRUD

@@ -9,27 +9,27 @@ import {
 	contentItemDTO,
 	ContentItemDTO,
 	ContentType,
+	CourseCreateInputFlat,
 	courseCreateUnionInput,
 	CourseCreateUnionInput,
 	CourseDTO,
 	courseDTO,
 	CourseNodeDisplay,
-	CourseNodeUpsert,
 	CourseTreeDTO,
 	courseTreeDTO,
 	CourseTreeItem,
 	CourseTreeItemUpsert,
-	CreateCourseFlatNodesInput,
-	createCourseFlatNodesInput,
+	CourseUpdateInputFlat,
+	courseUpdateUnionInput,
+	CourseUpdateUnionInput,
 	CreateCourseTreeDTO,
 	CreateFullContentItem,
-	editCourseFlatNodesInput,
-	EditCourseFlatNodesInput,
 	EditCourseTreeDTO,
 	fullContentItem,
 	FullContentItem,
 	getCourseFlatOutput,
 	GetCourseFlatOutput,
+	UpsertFlatNode,
 } from "@pete_keen/courses-core/validators";
 import { eq, inArray } from "drizzle-orm";
 import { assignClientIds, flattenCourseNodes } from "./utils";
@@ -152,7 +152,7 @@ const createCRUD = (
 
 		const syncFlatCourseNodes = async (
 			courseId: number,
-			input: CourseNodeUpsert[]
+			input: UpsertFlatNode[]
 		) => {
 			console.log(input);
 			// Identify which are new to be created
@@ -336,37 +336,34 @@ const createCRUD = (
 		// 	return courseTree;
 		// };
 
-		const update = async (data: EditCourseTreeDTO) => {
+		// const update = async (data: EditCourseTreeDTO) => {
+		// 	try {
+		// 		// 1. Update course info
+		// 		await db
+		// 			.update(schema.course)
+		// 			.set({
+		// 				title: data.title,
+		// 				excerpt: data.excerpt,
+		// 				isPublished: data.isPublished ?? false,
+		// 				updatedAt: new Date(),
+		// 			})
+		// 			.where(eq(schema.course.id, data.id));
+
+		// 		// 2. Sync course nodes
+		// 		await syncCourseTree(data.id, data.items);
+
+		// 		const course = await get(data.id);
+		// 		if (!course) {
+		// 			throw new Error("Failed to update course");
+		// 		}
+		// 		return course;
+		// 	} catch (error) {
+		// 		throw error;
+		// 	}
+		// };
+
+		const updateFlat = async (data: CourseUpdateInputFlat) => {
 			try {
-				// 1. Update course info
-				await db
-					.update(schema.course)
-					.set({
-						title: data.title,
-						excerpt: data.excerpt,
-						isPublished: data.isPublished ?? false,
-						updatedAt: new Date(),
-					})
-					.where(eq(schema.course.id, data.id));
-
-				// 2. Sync course nodes
-				await syncCourseTree(data.id, data.items);
-
-				const course = await get(data.id);
-				if (!course) {
-					throw new Error("Failed to update course");
-				}
-				return course;
-			} catch (error) {
-				throw error;
-			}
-		};
-
-		const updateFlat = async (data: EditCourseFlatNodesInput) => {
-			try {
-				// fails if input incorrect
-				const parsedData = editCourseFlatNodesInput.parse(data);
-
 				// set data
 				// 1. Update course info
 				await db
@@ -382,6 +379,33 @@ const createCRUD = (
 				// 2. Sync course nodes
 				await syncFlatCourseNodes(data.id, data.nodes);
 			} catch (err) {
+				throw err;
+			}
+		};
+
+		const update = async (input: CourseUpdateUnionInput) => {
+			try {
+				const parsedInput = courseUpdateUnionInput.parse(input);
+
+				if (input.structure === "nested") {
+					const { nodes, ...course } = input;
+					await updateFlat({
+						...course,
+						structure: "flat",
+						nodes: flattenTree(nodes),
+					});
+				} else if (input.structure === "flat") {
+					// This is annoying typescript fix - I shouldnt have to strip out children
+					const cleanNodes = input.nodes.map(
+						({ children, ...rest }) => rest
+					);
+					await updateFlat({
+						...input,
+						nodes: cleanNodes,
+					});
+				}
+			} catch (err) {
+				console.log(err);
 				throw err;
 			}
 		};
@@ -430,10 +454,10 @@ const createCRUD = (
 		// 	}
 		// };
 
-		const createFlat = async (input: CreateCourseFlatNodesInput) => {
+		const createFlat = async (input: CourseCreateInputFlat) => {
 			// fail if input does not parse
 			try {
-				const parsedInput = createCourseFlatNodesInput.parse(input);
+				// const parsedInput = createCourseFlatNodesInput.parse(input);
 
 				const [created] = await db
 					.insert(schema.course)
@@ -463,9 +487,13 @@ const createCRUD = (
 
 				if (input.structure === "nested") {
 					const { nodes, ...course } = input;
-					await createFlat({ ...course, nodes: flattenTree(nodes) });
+					await createFlat({
+						...course,
+						structure: "flat",
+						nodes: flattenTree(nodes),
+					});
 				} else {
-					await createFlat(parsedInput);
+					await createFlat(input);
 				}
 			} catch (err) {
 				console.log(err);
