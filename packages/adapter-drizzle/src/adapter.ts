@@ -33,7 +33,7 @@ import {
 } from "@pete_keen/courses-core/validators";
 import { eq, inArray } from "drizzle-orm";
 import { assignClientIds, flattenCourseNodes } from "./utils";
-import { buildTree } from "@pete_keen/courses-core";
+import { buildTree, flattenTree } from "@pete_keen/courses-core";
 
 // const defaultSchema = createSchema();
 
@@ -452,6 +452,7 @@ const createCRUD = (
 				// Step 2: Sync the tree using clientId/clientParentId logic
 				await syncFlatCourseNodes(courseId, input.nodes);
 			} catch (err) {
+				console.log(err);
 				throw err;
 			}
 		};
@@ -461,12 +462,13 @@ const createCRUD = (
 				const parsedInput = courseCreateUnionInput.parse(input);
 
 				if (input.structure === "nested") {
-					// TODO: flatten nodes function
-					console.log("flatten the nodes");
+					const { nodes, ...course } = input;
+					await createFlat({ ...course, nodes: flattenTree(nodes) });
 				} else {
 					await createFlat(parsedInput);
 				}
 			} catch (err) {
+				console.log(err);
 				throw err;
 			}
 		};

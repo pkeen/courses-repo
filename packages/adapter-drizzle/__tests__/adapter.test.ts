@@ -30,6 +30,7 @@ import {
 	CreateCourseNodeDTO,
 	EditCourseFlatNodesInput,
 	CourseCreateInputFlat,
+	CourseCreateNestedInput,
 } from "@pete_keen/courses-core/validators";
 import { afterEach } from "vitest";
 
@@ -920,7 +921,7 @@ describe("Courses: create", () => {
 	it("fails with wrong input type", async () => {
 		await expect(adapter.course.create("hello")).rejects.toThrowError();
 	});
-	it("it works when supplied a flat structure", async () => {
+	it("works when supplied a flat structure", async () => {
 		const input: CourseCreateInputFlat = {
 			title: "test course",
 			excerpt: "asdfjsdklfjsdf",
@@ -950,6 +951,49 @@ describe("Courses: create", () => {
 			],
 		};
 
+		await adapter.course.create(input);
+
+		const [course] = await db.select().from(schema.course);
+
+		expect(course.title).toBe("test course");
+
+		const nodes = await db.select().from(schema.courseNode);
+
+		expect(nodes.length).toEqual(3);
+	});
+
+	it("works when supplied a nested structure", async () => {
+		const input: CourseCreateNestedInput = {
+			title: "test course",
+			excerpt: "asdfjsdklfjsdf",
+			userId: "11111",
+			structure: "nested",
+			nodes: [
+				{
+					order: 0,
+					parentId: null,
+					contentId: 1,
+					clientId: "BHAFC",
+					children: [
+						{
+							order: 0,
+							parentId: null,
+							contentId: 2,
+							clientId: "CFC",
+							clientParentId: "BHAFC",
+							children: [],
+						},
+					],
+				},
+				{
+					order: 1,
+					parentId: null,
+					contentId: 1,
+					clientId: "MUFC",
+					children: [],
+				},
+			],
+		};
 		await adapter.course.create(input);
 
 		const [course] = await db.select().from(schema.course);
