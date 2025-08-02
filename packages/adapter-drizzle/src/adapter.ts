@@ -82,79 +82,79 @@ const createCRUD = (
 		// 	return flat;
 		// };
 
-		const syncCourseTree = async (
-			courseId: number,
-			incomingItems: CourseTreeItemUpsert[]
-		) => {
-			const flatIncoming = flattenCourseNodes(incomingItems, null);
+		// const syncCourseTree = async (
+		// 	courseId: number,
+		// 	incomingItems: CourseTreeItemUpsert[]
+		// ) => {
+		// 	const flatIncoming = flattenCourseNodes(incomingItems, null);
 
-			// const existing = await db.query.courseNode.findMany({
-			// 	where: eq(schema.courseNode.courseId, courseId),
-			// });
-			const existing = await db
-				.select()
-				.from(schema.courseNode)
-				.where(eq(schema.courseNode.courseId, courseId));
+		// 	// const existing = await db.query.courseNode.findMany({
+		// 	// 	where: eq(schema.courseNode.courseId, courseId),
+		// 	// });
+		// 	const existing = await db
+		// 		.select()
+		// 		.from(schema.courseNode)
+		// 		.where(eq(schema.courseNode.courseId, courseId));
 
-			const existingMap = new Map(existing.map((n) => [n.id, n]));
+		// 	const existingMap = new Map(existing.map((n) => [n.id, n]));
 
-			const incomingMap = new Map(
-				flatIncoming.filter((n) => n.id).map((n) => [n.id!, n])
-			);
+		// 	const incomingMap = new Map(
+		// 		flatIncoming.filter((n) => n.id).map((n) => [n.id!, n])
+		// 	);
 
-			const toDelete = existing.filter((n) => !incomingMap.has(n.id));
-			const toCreate = flatIncoming.filter((n) => !n.id);
-			const toUpdate = flatIncoming.filter((n) => {
-				if (!n.id) return false;
-				const old = existingMap.get(n.id);
-				return (
-					old &&
-					(old.order !== n.order ||
-						old.parentId !== n.parentId ||
-						old.contentId !== n.contentId)
-				);
-			});
+		// 	const toDelete = existing.filter((n) => !incomingMap.has(n.id));
+		// 	const toCreate = flatIncoming.filter((n) => !n.id);
+		// 	const toUpdate = flatIncoming.filter((n) => {
+		// 		if (!n.id) return false;
+		// 		const old = existingMap.get(n.id);
+		// 		return (
+		// 			old &&
+		// 			(old.order !== n.order ||
+		// 				old.parentId !== n.parentId ||
+		// 				old.contentId !== n.contentId)
+		// 		);
+		// 	});
 
-			// DELETE
-			if (toDelete.length) {
-				await db.delete(schema.courseNode).where(
-					inArray(
-						schema.courseNode.id,
-						toDelete.map((n) => n.id)
-					)
-				);
-			}
+		// 	// DELETE
+		// 	if (toDelete.length) {
+		// 		await db.delete(schema.courseNode).where(
+		// 			inArray(
+		// 				schema.courseNode.id,
+		// 				toDelete.map((n) => n.id)
+		// 			)
+		// 		);
+		// 	}
 
-			// UPDATE
-			for (const n of toUpdate) {
-				await db
-					.update(schema.courseNode)
-					.set({
-						order: n.order,
-						parentId: n.parentId,
-						contentId: n.contentId,
-					})
-					.where(eq(schema.courseNode.id, n.id!));
-			}
+		// 	// UPDATE
+		// 	for (const n of toUpdate) {
+		// 		await db
+		// 			.update(schema.courseNode)
+		// 			.set({
+		// 				order: n.order,
+		// 				parentId: n.parentId,
+		// 				contentId: n.contentId,
+		// 			})
+		// 			.where(eq(schema.courseNode.id, n.id!));
+		// 	}
 
-			// CREATE
-			if (toCreate.length) {
-				await db.insert(schema.courseNode).values(
-					toCreate.map((n) => ({
-						courseId,
-						parentId: n.parentId,
-						order: n.order,
-						contentId: n.contentId,
-					}))
-				);
-			}
-		};
+		// 	// CREATE
+		// 	if (toCreate.length) {
+		// 		await db.insert(schema.courseNode).values(
+		// 			toCreate.map((n) => ({
+		// 				courseId,
+		// 				parentId: n.parentId,
+		// 				order: n.order,
+		// 				contentId: n.contentId,
+		// 			}))
+		// 		);
+		// 	}
+		// };
 
 		const syncFlatCourseNodes = async (
 			courseId: number,
 			input: UpsertFlatNode[]
 		) => {
-			console.log(input);
+			// console.log(input);
 			// Identify which are new to be created
 			const existing = await db
 				.select()
@@ -185,6 +185,18 @@ const createCRUD = (
 			console.log("toUpdate", toUpdate);
 			console.log("toDelete", toDelete);
 
+			// create a map of clientIds to newly created db ids
+			// this is placed outside the conditional create block bc it needs to still work in update as empty object
+			const clientIdToDbId: Record<string, number> = {};
+
+			// add each incoming to clientIdToDbId
+			incomingMap.forEach((n) => {
+				if (!n.id) return;
+				clientIdToDbId[n.clientId] = n.id;
+			});
+
+			console.log("ClientIdToDbId (after incomingMap)", clientIdToDbId);
+
 			// CREATE
 			if (toCreate.length) {
 				const inserted = await db
@@ -199,10 +211,6 @@ const createCRUD = (
 					)
 					.returning({ id: schema.courseNode.id });
 
-				// create a map of clientIds to newly created db ids
-				// this is placed outside the conditional create block bc it needs to still work in update as empty object
-				const clientIdToDbId: Record<string, number> = {};
-
 				toCreate.forEach((n, i) => {
 					clientIdToDbId[n.clientId] = inserted[i].id;
 				});
@@ -216,20 +224,20 @@ const createCRUD = (
 					"To Update list with added toCreates... toUpdate",
 					toUpdate
 				);
-
-				// mutate the toUpdate array substituting ids and parentIds
-				toUpdate.forEach((node) => {
-					node.id = node.id ?? clientIdToDbId[node.clientId];
-					node.parentId = node.clientParentId
-						? clientIdToDbId[node.clientParentId]
-						: node.parentId;
-				});
-
-				console.log(
-					"Mutated update list with ids and parentIds added. toUpdate",
-					toUpdate
-				);
 			}
+
+			// mutate the toUpdate array substituting ids and parentIds
+			toUpdate.forEach((node) => {
+				node.id = node.id ?? clientIdToDbId[node.clientId];
+				node.parentId = node.clientParentId
+					? clientIdToDbId[node.clientParentId]
+					: node.parentId;
+			});
+
+			console.log(
+				"Mutated update list with ids and parentIds added. toUpdate",
+				toUpdate
+			);
 
 			// Update records
 			for (const n of toUpdate) {

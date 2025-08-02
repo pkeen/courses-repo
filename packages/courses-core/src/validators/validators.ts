@@ -358,6 +358,12 @@ export const getCourseFlatOutput = courseDTO.extend({
 });
 export type GetCourseFlatOutput = z.infer<typeof getCourseFlatOutput>;
 
+
+/*
+ * Union Flat and Nested Course / CourseNode Types
+*/
+
+
 export const getBaseNode = courseNodeDTO
 	.extend({
 		clientId: z.string(),

@@ -21,7 +21,8 @@ export default async function CourseEditPage({
 			onSubmit={async (values) => {
 				"use server";
 				await courses.course.update(values);
-				return values;
+				const updated = courses.course.get(values.id);
+				return updated;
 			}}
 			onDelete={async (id) => {
 				"use server";

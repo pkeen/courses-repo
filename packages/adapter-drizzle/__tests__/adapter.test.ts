@@ -770,7 +770,7 @@ describe("Courses: updateFlat", () => {
 			.select()
 			.from(schema.courseNode)
 			.orderBy(schema.courseNode.id);
-		console.log(nodes);
+		// console.log(nodes);
 
 		expect(nodes[0].parentId).toBe(2);
 	});
@@ -827,9 +827,9 @@ describe("Courses: updateFlat", () => {
 			.select()
 			.from(schema.courseNode)
 			.orderBy(schema.courseNode.id);
-		console.log(nodes);
+		// console.log(nodes);
 
-		console.log(nodes);
+		// console.log(nodes);
 
 		expect(nodes[0].parentId).toBe(5);
 	});
@@ -862,6 +862,7 @@ describe("Courses: update", () => {
 			contentId: 1,
 		},
 		{
+			// nested under third
 			courseId: 1,
 			order: 0,
 			parentId: 3,
@@ -887,6 +888,41 @@ describe("Courses: update", () => {
 
 	it("fails if supplied incorrect input shape", async () => {
 		await expect(adapter.course.update("hello")).rejects.toThrowError();
+	});
+
+	it("nests second node under first", async () => {
+		const input: CourseUpdateInputFlat = {
+			id: 1,
+			title: "test course",
+			excerpt: "asdfjsdklfjsdf",
+			userId: "11111",
+			structure: "flat",
+			isPublished: true,
+			nodes: [
+				{
+					id: 1,
+					order: 0,
+					parentId: null,
+					contentId: 1,
+					clientId: "BHAFC",
+				},
+				{
+					id: 2,
+					order: 0,
+					parentId: null,
+					contentId: 2,
+					clientId: "CFC",
+					clientParentId: "BHAFC",
+				},
+			],
+		};
+
+		await adapter.course.update(input);
+
+		const nodes = await db.select().from(schema.courseNode);
+
+		console.log("NODES:", nodes);
+		expect(nodes[1].parentId).toBe(1);
 	});
 
 	it("updates nodes when supplied a flat input shape", async () => {
@@ -1190,7 +1226,6 @@ describe("Courses: get", () => {
 
 	it("returns a stored course in nested structure with no arguments", async () => {
 		const result = await adapter.course.get(1);
-		console.log(result);
 		expect(result.nodes[0].order).toBe(0);
 		expect(result.structure).toBe("nested");
 		expect(result.nodes.length).toEqual(2);
