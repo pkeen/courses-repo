@@ -34,6 +34,7 @@ import {
 import { eq, inArray } from "drizzle-orm";
 import { assignClientIds, flattenCourseNodes } from "./utils";
 import { buildTree, flattenTree } from "@pete_keen/courses-core";
+import { compileFunction } from "vm";
 
 // const defaultSchema = createSchema();
 
@@ -150,6 +151,9 @@ const createCRUD = (
 		// 	}
 		// };
 
+		/*
+		 * Original primitive version of the function I created
+		 */
 		const syncFlatCourseNodes = async (
 			courseId: number,
 			input: UpsertFlatNode[]

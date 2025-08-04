@@ -40,7 +40,7 @@ const input: BackendNode[] = [
 describe("buildTree - function to turn flat backend structure into tree for frontend", () => {
 	it("changes types from flat to nested object", () => {
 		const result = buildTree(input);
-		console.log(result);
+		// console.log(result);
 		const parseResult = courseTreeArray.safeParse(result);
 		expect(parseResult.success).toEqual(true);
 	});
@@ -51,9 +51,9 @@ describe("buildTree - function to turn flat backend structure into tree for fron
 		const recursiveCheckOrder = (items: CourseTreeItem[]) => {
 			let prevOrder = -1;
 			items.forEach((i) => {
-				console.log("title", i.title);
-				console.log("order", i.order);
-				console.log("previous order", prevOrder);
+				// console.log("title", i.title);
+				// console.log("order", i.order);
+				// console.log("previous order", prevOrder);
 				expect(i.order).toBeGreaterThan(prevOrder);
 				prevOrder = i.order;
 				i.children && recursiveCheckOrder(i.children);
