@@ -14,7 +14,9 @@ import {
 	CourseCreateUnionInput,
 	CourseDTO,
 	courseDTO,
+	CourseNodeCreateDTO,
 	CourseNodeDisplay,
+	CourseNodeDTO,
 	CourseTreeDTO,
 	courseTreeDTO,
 	CourseTreeItem,
@@ -22,6 +24,7 @@ import {
 	CourseUpdateInputFlat,
 	courseUpdateUnionInput,
 	CourseUpdateUnionInput,
+	CreateCourseDTO,
 	CreateCourseTreeDTO,
 	CreateFullContentItem,
 	EditCourseTreeDTO,
@@ -34,7 +37,7 @@ import {
 import { eq, inArray } from "drizzle-orm";
 import { assignClientIds, flattenCourseNodes } from "./utils";
 import { buildTree, flattenTree } from "@pete_keen/courses-core";
-import { compileFunction } from "vm";
+import { syncFlatTree } from "@pete_keen/courses-core";
 
 // const defaultSchema = createSchema();
 
@@ -266,6 +269,40 @@ const createCRUD = (
 			}
 		};
 
+		/*
+		 * Helper functions for the syncNodes function
+		 */
+
+		const syncFlatNodes = async () => {};
+
+		const getExistingCourseNodes = async (courseId: number) => {
+			return await db
+				.select()
+				.from(schema.courseNode)
+				.where(eq(schema.courseNode.courseId, courseId));
+		};
+
+		const insertNode = async (node: CourseNodeCreateDTO) => {
+			const [inserted] = await db
+				.insert(schema.courseNode)
+				.values(node)
+				.returning({ id: schema.courseNode.id });
+			return inserted.id;
+		};
+
+		const updateNode = async (input: CourseNodeDTO) => {
+			await db
+				.update(schema.courseNode)
+				.set(input)
+				.where(eq(schema.courseNode.id, input.id));
+		};
+
+		const deleteNodes = async (ids: number[]) => {
+			await db
+				.delete(schema.courseNode)
+				.where(inArray(schema.courseNode.id, ids));
+		};
+
 		const list = async (): Promise<CourseDTO[]> => {
 			const results = await db.select().from(schema.course);
 			const parsed = courseDTO.array().safeParse(results);
@@ -389,7 +426,17 @@ const createCRUD = (
 					.where(eq(schema.course.id, data.id));
 
 				// 2. Sync course nodes
-				await syncFlatCourseNodes(data.id, data.nodes);
+				const existing = await getExistingCourseNodes(data.id);
+				await syncFlatTree({
+					courseId: data.id,
+					existing,
+					incoming: data.nodes,
+					insertNode,
+					updateNode,
+					deleteNodes,
+				});
+
+				// await syncFlatCourseNodes(data.id, data.nodes);
 			} catch (err) {
 				throw err;
 			}
@@ -486,7 +533,16 @@ const createCRUD = (
 				const courseId = created.id;
 
 				// Step 2: Sync the tree using clientId/clientParentId logic
-				await syncFlatCourseNodes(courseId, input.nodes);
+				// await syncFlatCourseNodes(courseId, input.nodes);
+
+				await syncFlatTree({
+					courseId,
+					incoming: input.nodes,
+					existing: [],
+					insertNode,
+					updateNode,
+					deleteNodes,
+				});
 			} catch (err) {
 				console.log(err);
 				throw err;

@@ -1,4 +1,4 @@
-import { CourseNodeDTO, UpsertFlatNode } from "validators";
+import { CourseNodeCreateDTO, CourseNodeDTO, UpsertFlatNode } from "validators";
 
 // interface FlatNodesHelperReturnType {
 //     toCreate
@@ -21,33 +21,16 @@ import { CourseNodeDTO, UpsertFlatNode } from "validators";
 export async function syncFlatTree({
 	courseId,
 	incoming,
-	existing,
+	existing = [],
 	insertNode,
 	updateNode,
 	deleteNodes,
 }: {
 	courseId: number;
 	incoming: UpsertFlatNode[];
-	existing: {
-		id: number;
-		contentId: number;
-		parentId: number | null;
-		order: number;
-	}[];
-	insertNode: (node: {
-		courseId: number;
-		parentId: number | null;
-		contentId: number;
-		order: number;
-	}) => Promise<number>;
-	updateNode: (
-		id: number,
-		node: Partial<{
-			parentId: number | null;
-			contentId: number;
-			order: number;
-		}>
-	) => Promise<void>;
+	existing: CourseNodeDTO[];
+	insertNode: (node: CourseNodeCreateDTO) => Promise<number>;
+	updateNode: (input: CourseNodeDTO) => Promise<void>;
 	deleteNodes: (ids: number[]) => Promise<void>;
 }) {
 	const existingMap = new Map(existing.map((n) => [n.id, n]));
@@ -67,8 +50,11 @@ export async function syncFlatTree({
 				old.contentId !== n.contentId)
 		);
 	});
-
+	console.log("existing", existing);
+	console.log("incoming map", incomingMap);
+	console.log("ToCreate", toCreate);
 	console.log("toUpdate", toUpdate);
+	console.log("toDelete", toDelete);
 
 	// Topological sort toCreate based on clientParentId
 	const sortedToCreate: UpsertFlatNode[] = [];
@@ -83,7 +69,9 @@ export async function syncFlatTree({
 		for (const child of children) visit(child.clientId);
 		if (nodeMap[id]) sortedToCreate.push(nodeMap[id]);
 	};
-	const roots = toCreate.filter((n) => !n.clientParentId);
+	const roots = toCreate.filter(
+		(n) => !n.clientParentId || !nodeMap[n.clientParentId] // parent exists but is NOT a new node);
+	);
 	// ^^ uses clientParentId instead of parentId because parentId will be unkown of newly created parent nodes
 	for (const root of roots) visit(root.clientId);
 	sortedToCreate.reverse();
@@ -94,6 +82,7 @@ export async function syncFlatTree({
 	});
 
 	for (const node of sortedToCreate) {
+		console.log("creating", node);
 		const parentId = node.clientParentId
 			? clientIdToDbId[node.clientParentId]
 			: null;
@@ -106,15 +95,26 @@ export async function syncFlatTree({
 		clientIdToDbId[node.clientId] = id;
 	}
 
+	// 2nd pass: find existing nodes whose new parent was just created
+	for (const node of incoming) {
+		if (!node.id) continue; // skip brand new nodes, they were handled in create
+		if (!node.clientParentId) continue;
+
+		const newParentId = clientIdToDbId[node.clientParentId];
+		if (!newParentId) continue; // parent not created this run
+
+		const old = existingMap.get(node.id);
+		if (old && old.parentId !== newParentId) {
+			// Only update if DB parentId differs from new parent's DB id
+			toUpdate.push({ ...node, parentId: newParentId });
+		}
+	}
+
 	for (const node of toUpdate) {
 		const parentId = node.clientParentId
 			? clientIdToDbId[node.clientParentId]
 			: node.parentId;
-		await updateNode(node.id!, {
-			contentId: node.contentId,
-			order: node.order,
-			parentId,
-		});
+		await updateNode({ ...node, courseId, id: node.id!, parentId });
 	}
 
 	if (toDelete.length > 0) {

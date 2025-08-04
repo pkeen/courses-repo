@@ -21,8 +21,8 @@ export const courseNodeDTO = z.object({
 	contentId: z.number(),
 });
 export type CourseNodeDTO = z.infer<typeof courseNodeDTO>;
-export const createCourseNodeDTO = courseNodeDTO.omit({ id: true });
-export type CreateCourseNodeDTO = z.infer<typeof createCourseNodeDTO>;
+export const courseNodeCreateDTO = courseNodeDTO.omit({ id: true });
+export type CourseNodeCreateDTO = z.infer<typeof courseNodeCreateDTO>;
 
 export const courseDTO = z.object({
 	id: z.number(),
@@ -358,11 +358,9 @@ export const getCourseFlatOutput = courseDTO.extend({
 });
 export type GetCourseFlatOutput = z.infer<typeof getCourseFlatOutput>;
 
-
 /*
  * Union Flat and Nested Course / CourseNode Types
-*/
-
+ */
 
 export const getBaseNode = courseNodeDTO
 	.extend({
@@ -412,7 +410,7 @@ export type GetCourseResponse = z.infer<typeof courseGetResponse>;
  * Create Course Nodes
  */
 
-export const createBaseNode = createCourseNodeDTO
+export const createBaseNode = courseNodeCreateDTO
 	.extend({
 		clientId: z.string(),
 		clientParentId: z.string().optional(),
@@ -464,7 +462,7 @@ export type CourseCreateUnionInput = z.infer<typeof courseCreateUnionInput>;
  * Edit Course Nodes
  */
 
-export const upsertBaseNode = createCourseNodeDTO
+export const upsertBaseNode = courseNodeCreateDTO
 	.extend({
 		clientId: z.string(),
 		clientParentId: z.string().optional().nullable(),
@@ -504,7 +502,7 @@ export type CourseUpdateInputFlat = z.infer<typeof courseUpdateInputFlat>;
 // export const courseUpdateInputFlatBase = courseUpdateInputFlat.omit({
 // 	structure: true,
 // });
-// export type CourseUpdateInputFlatBase 
+// export type CourseUpdateInputFlatBase
 
 export const courseUpdateInputNested = courseDTO.extend({
 	structure: z.literal("nested"),
