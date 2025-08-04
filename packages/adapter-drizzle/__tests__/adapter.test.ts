@@ -1213,7 +1213,7 @@ describe("Courses: get", () => {
 		excerpt: "lorem ipsum...",
 	};
 
-	const existingNodes: CreateCourseNodeDTO[] = [
+	const existingNodes: CourseNodeCreateDTO[] = [
 		{
 			courseId: 1,
 			order: 0,
@@ -1278,7 +1278,7 @@ describe("Courses: destroy", () => {
 		excerpt: "lorem ipsum...",
 	};
 
-	const existingNodes: CreateCourseNodeDTO[] = [
+	const existingNodes: CourseNodeCreateDTO[] = [
 		{
 			courseId: 1,
 			order: 0,
