@@ -95,18 +95,23 @@ export async function syncFlatTree({
 		clientIdToDbId[node.clientId] = id;
 	}
 
-	// 2nd pass: find existing nodes whose new parent was just created
+	// 2nd pass: adjust parentId for existing nodes
 	for (const node of incoming) {
-		if (!node.id) continue; // skip brand new nodes, they were handled in create
-		if (!node.clientParentId) continue;
-
-		const newParentId = clientIdToDbId[node.clientParentId];
-		if (!newParentId) continue; // parent not created this run
+		if (!node.id) continue; // skip brand new nodes
 
 		const old = existingMap.get(node.id);
-		if (old && old.parentId !== newParentId) {
-			// Only update if DB parentId differs from new parent's DB id
-			toUpdate.push({ ...node, parentId: newParentId });
+
+		// Case 1: parent is a newly created node
+		if (node.clientParentId) {
+			const newParentId = clientIdToDbId[node.clientParentId];
+			if (newParentId && old && old.parentId !== newParentId) {
+				toUpdate.push({ ...node, parentId: newParentId });
+			}
+		}
+
+		// Case 2: moved to root
+		if (!node.clientParentId && old && old.parentId !== null) {
+			toUpdate.push({ ...node, parentId: null });
 		}
 	}
 

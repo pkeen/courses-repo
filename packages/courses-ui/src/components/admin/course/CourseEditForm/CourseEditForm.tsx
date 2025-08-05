@@ -186,7 +186,7 @@ export function CourseEditForm({
 								onSelect={async (item) => {
 									const courseTreeItem: UpsertNestedNode = {
 										id: undefined,
-										clientId: `new-${fields.length}`,
+										clientId: `${crypto.randomUUID()}`,
 										contentId: item.id,
 										order: fields.length,
 										parentId: null,

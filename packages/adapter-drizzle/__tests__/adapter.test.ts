@@ -941,6 +941,8 @@ describe("Courses: update", () => {
 					parentId: null,
 					contentId: 1,
 					clientId: "BHAFC",
+					title: "BHAFC",
+					type: "module",
 				},
 				{
 					order: 0,
@@ -948,12 +950,16 @@ describe("Courses: update", () => {
 					contentId: 2,
 					clientId: "CFC",
 					clientParentId: "BHAFC",
+					title: "CFC",
+					type: "module",
 				},
 				{
 					order: 1,
 					parentId: null,
 					contentId: 1,
 					clientId: "MUFC",
+					title: "MUFC",
+					type: "module",
 				},
 			],
 		};

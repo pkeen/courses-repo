@@ -50,8 +50,8 @@ import { UpsertNestedNode } from "@pete_keen/courses-core/validators";
 interface Props {
 	collapsible?: boolean;
 	// initialItems?: CourseTreeItem[];
-	items: UpsertNestedNode[];
-	onChange: (items: UpsertNestedNode[]) => void;
+	items: CourseTreeItem[];
+	onChange: (items: CourseTreeItem[]) => void;
 	indentationWidth?: number;
 	indicator?: boolean;
 	removable?: boolean;
@@ -275,30 +275,30 @@ export function SortableTree({
 
 		const { depth, clientParentId } = projection;
 
-		// Enforce nesting rules
-		if (isModule(activeItem)) {
-			// Limit nesting depth of modules
-			const MAX_MODULE_DEPTH = 2; // 👈 set your limit here
-			if (depth > MAX_MODULE_DEPTH) return;
+		// // Enforce nesting rules
+		// if (isModule(activeItem)) {
+		// 	// Limit nesting depth of modules
+		// 	const MAX_MODULE_DEPTH = 2; // 👈 set your limit here
+		// 	if (depth > MAX_MODULE_DEPTH) return;
 
-			// Optionally ensure it's only under other modules or root
-			if (clientParentId !== null) {
-				const parentItem = clonedItems.find(
-					(item) => item.clientId === clientParentId
-				);
-				if (!parentItem || !isModule(parentItem)) return;
-			} // Modules can only be top level
-		} else {
-			// Non-module items can be top-level or under modules
-			if (clientParentId === null) {
-				// it's going to root — allow it
-			} else {
-				const parentItem = clonedItems.find(
-					(item) => item.clientId === clientParentId
-				);
-				if (!parentItem || !isModule(parentItem)) return;
-			}
-		}
+		// 	// Optionally ensure it's only under other modules or root
+		// 	if (clientParentId !== null) {
+		// 		const parentItem = clonedItems.find(
+		// 			(item) => item.clientId === clientParentId
+		// 		);
+		// 		if (!parentItem || !isModule(parentItem)) return;
+		// 	} // Modules can only be top level
+		// } else {
+		// 	// Non-module items can be top-level or under modules
+		// 	if (clientParentId === null) {
+		// 		// it's going to root — allow it
+		// 	} else {
+		// 		const parentItem = clonedItems.find(
+		// 			(item) => item.clientId === clientParentId
+		// 		);
+		// 		if (!parentItem || !isModule(parentItem)) return;
+		// 	}
+		// }
 
 		const activeIndex = clonedItems.findIndex(
 			(item) => item.clientId === activeId
