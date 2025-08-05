@@ -297,13 +297,117 @@ export function getDragDepth(offset: number, indentationWidth: number) {
 // 	return 0;
 // }
 
+// export function getProjection(
+// 	items: FlattenedCourseTreeItem[],
+// 	activeId: string,
+// 	overId: string,
+// 	dragOffset: number,
+// 	indentationWidth: number,
+// 	maxDepth: number = 2 // configurable (premium)
+// ) {
+// 	const overItemIndex = items.findIndex(
+// 		({ clientId }) => clientId === overId
+// 	);
+// 	const activeItemIndex = items.findIndex(
+// 		({ clientId }) => clientId === activeId
+// 	);
+
+// 	const activeItem = items[activeItemIndex];
+// 	const newItems = arrayMove(items, activeItemIndex, overItemIndex);
+
+// 	const previousItem = newItems[overItemIndex - 1];
+// 	const nextItem = newItems[overItemIndex + 1];
+
+// 	const dragDepth = getDragDepth(dragOffset, indentationWidth);
+// 	const projectedDepth = activeItem.depth + dragDepth;
+
+// 	const maxAllowedDepth = getMaxDepth({
+// 		activeItem,
+// 		previousItem,
+// 		maxDepth,
+// 	});
+// 	const minAllowedDepth = getMinDepth({ nextItem });
+
+// 	let depth = projectedDepth;
+
+// 	if (projectedDepth >= maxAllowedDepth) {
+// 		depth = maxAllowedDepth;
+// 	} else if (projectedDepth < minAllowedDepth) {
+// 		depth = minAllowedDepth;
+// 	}
+
+// 	const newParentId = getParentId(
+// 		depth,
+// 		previousItem,
+// 		nextItem,
+// 		activeItem,
+// 		newItems,
+// 		overItemIndex
+// 	);
+
+// 	// Only set if the parent actually changed
+// 	const clientParentId =
+// 		newParentId !== activeItem.clientParentId ? newParentId : undefined;
+
+// 	return {
+// 		depth,
+// 		maxDepth: maxAllowedDepth,
+// 		minDepth: minAllowedDepth,
+// 		clientParentId,
+// 	};
+// }
+
+// function getParentId(
+// 	depth: number,
+// 	previousItem: FlattenedCourseTreeItem | undefined,
+// 	nextItem: FlattenedCourseTreeItem | undefined,
+// 	activeItem: FlattenedCourseTreeItem,
+// 	newItems: FlattenedCourseTreeItem[],
+// 	overItemIndex: number
+// ) {
+// 	// Root-level items have no parent
+// 	if (depth === 0) {
+// 		return null;
+// 		// Try using 'root' here
+// 		// return "root";
+// 	}
+
+// 	// If depth is same as previous item, keep its parent
+// 	if (previousItem && depth === previousItem.depth) {
+// 		return previousItem.clientParentId;
+// 	}
+
+// 	// If increasing depth → parent is the previous item
+// 	if (previousItem && depth > previousItem.depth) {
+// 		return previousItem.clientId;
+// 	}
+
+// 	// If reordering inside same module (between lessons), keep current parent
+// 	if (
+// 		previousItem &&
+// 		nextItem &&
+// 		previousItem.clientParentId === nextItem.clientParentId &&
+// 		previousItem.clientParentId !== null
+// 	) {
+// 		return previousItem.clientParentId;
+// 	}
+
+// 	// Otherwise, find the nearest ancestor at the same depth
+// 	const newParent = newItems
+// 		.slice(0, overItemIndex)
+// 		.reverse()
+// 		.find((item) => item.depth === depth)?.clientParentId;
+
+// 	return newParent ?? null;
+// }
+
 export function getProjection(
 	items: FlattenedCourseTreeItem[],
 	activeId: string,
 	overId: string,
 	dragOffset: number,
 	indentationWidth: number,
-	maxDepth: number = 2 // configurable (premium)
+	maxDepth: number = 2
 ) {
 	const overItemIndex = items.findIndex(
 		({ clientId }) => clientId === overId
@@ -321,33 +425,29 @@ export function getProjection(
 	const dragDepth = getDragDepth(dragOffset, indentationWidth);
 	const projectedDepth = activeItem.depth + dragDepth;
 
-	const maxAllowedDepth = getMaxDepth({
-		activeItem,
-		previousItem,
-		maxDepth,
-	});
+	const maxAllowedDepth = getMaxDepth({ activeItem, previousItem, maxDepth });
 	const minAllowedDepth = getMinDepth({ nextItem });
 
 	let depth = projectedDepth;
+	if (projectedDepth >= maxAllowedDepth) depth = maxAllowedDepth;
+	else if (projectedDepth < minAllowedDepth) depth = minAllowedDepth;
 
-	if (projectedDepth >= maxAllowedDepth) {
-		depth = maxAllowedDepth;
-	} else if (projectedDepth < minAllowedDepth) {
-		depth = minAllowedDepth;
-	}
+	const newParentId = getParentId(
+		depth,
+		previousItem,
+		nextItem,
+		activeItem,
+		newItems,
+		overItemIndex
+	);
 
 	return {
 		depth,
 		maxDepth: maxAllowedDepth,
 		minDepth: minAllowedDepth,
-		clientParentId: getParentId(
-			depth,
-			previousItem,
-			nextItem,
-			activeItem,
-			newItems,
-			overItemIndex
-		),
+		clientParentId: newParentId, // always truth for tree building
+		movedParentId:
+			newParentId !== activeItem.clientParentId ? newParentId : undefined, // only if changed
 	};
 }
 
@@ -359,22 +459,15 @@ function getParentId(
 	newItems: FlattenedCourseTreeItem[],
 	overItemIndex: number
 ) {
-	// Root-level items have no parent
 	if (depth === 0) {
-		return null;
+		return null; // root level
 	}
-
-	// If depth is same as previous item, keep its parent
 	if (previousItem && depth === previousItem.depth) {
 		return previousItem.clientParentId;
 	}
-
-	// If increasing depth → parent is the previous item
 	if (previousItem && depth > previousItem.depth) {
 		return previousItem.clientId;
 	}
-
-	// If reordering inside same module (between lessons), keep current parent
 	if (
 		previousItem &&
 		nextItem &&
@@ -383,8 +476,6 @@ function getParentId(
 	) {
 		return previousItem.clientParentId;
 	}
-
-	// Otherwise, find the nearest ancestor at the same depth
 	const newParent = newItems
 		.slice(0, overItemIndex)
 		.reverse()
@@ -392,6 +483,46 @@ function getParentId(
 
 	return newParent ?? null;
 }
+
+
+// function getParentId(
+// 	depth: number,
+// 	previousItem: FlattenedCourseTreeItem | undefined,
+// 	nextItem: FlattenedCourseTreeItem | undefined,
+// 	activeItem: FlattenedCourseTreeItem,
+// 	newItems: FlattenedCourseTreeItem[],
+// 	overItemIndex: number
+// ) {
+// 	// Start with the current parent
+// 	let parentId = activeItem.clientParentId ?? null;
+
+// 	if (depth === 0) {
+// 		parentId = null;
+// 	} else if (previousItem && depth === previousItem.depth) {
+// 		parentId = previousItem.clientParentId;
+// 	} else if (previousItem && depth > previousItem.depth) {
+// 		parentId = previousItem.clientId;
+// 	} else if (
+// 		previousItem &&
+// 		nextItem &&
+// 		previousItem.clientParentId === nextItem.clientParentId &&
+// 		previousItem.clientParentId !== null
+// 	) {
+// 		parentId = previousItem.clientParentId;
+// 	} else {
+// 		const found = newItems
+// 			.slice(0, overItemIndex)
+// 			.reverse()
+// 			.find((item) => item.depth === depth)?.clientParentId;
+
+// 		if (found !== undefined) {
+// 			parentId = found;
+// 		}
+// 	}
+
+// 	return parentId;
+// }
+
 
 export function getMaxDepth({
 	activeItem,

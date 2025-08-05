@@ -273,7 +273,7 @@ export function SortableTree({
 		);
 		if (!projection) return;
 
-		const { depth, clientParentId } = projection;
+		const { depth, clientParentId, movedParentId } = projection;
 
 		// // Enforce nesting rules
 		// if (isModule(activeItem)) {
@@ -311,6 +311,7 @@ export function SortableTree({
 			...clonedItems[activeIndex],
 			depth,
 			clientParentId: clientParentId?.toString() ?? null,
+			movedParentId,
 		};
 
 		const sortedItems = arrayMove(clonedItems, activeIndex, overIndex);

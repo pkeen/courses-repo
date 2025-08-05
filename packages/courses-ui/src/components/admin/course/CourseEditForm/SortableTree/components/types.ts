@@ -36,6 +36,7 @@ export type CourseTreeItem = {
 	parentId: number | null;
 	children: CourseTreeItem[]; // allow undefined
 	clientParentId?: string | null; // store it permanently
+	movedParentId?: string | null; // 
 };
 
 export const courseTreeItem: z.ZodType<
@@ -49,6 +50,7 @@ export const courseTreeItem: z.ZodType<
 		collapsed: z.boolean().optional(),
 		children: z.array(courseTreeItem),
 		clientParentId: z.string().optional().nullable(),
+		movedParentId: z.string().optional().nullable(),
 	})
 );
 
@@ -57,6 +59,7 @@ export interface FlattenedCourseTreeItem extends CourseTreeItem {
 	clientParentId: string | null;
 	depth: number;
 	index: number;
+	// movedParentId?: string | null; // only present if parent actually changed
 }
 
 // export interface CourseLesson extends CourseTreeItem {

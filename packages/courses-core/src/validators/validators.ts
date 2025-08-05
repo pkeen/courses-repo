@@ -470,6 +470,7 @@ export const upsertBaseNode = courseNodeCreateDTO
 		isPublished: z.boolean().optional(),
 		title: z.string().optional(),
 		id: z.number().optional(),
+		movedParentId: z.string().optional().nullable(), // Only newly moved clientParentIds
 	})
 	.omit({ courseId: true });
 export type UpsertBaseNode = z.infer<typeof upsertBaseNode>;

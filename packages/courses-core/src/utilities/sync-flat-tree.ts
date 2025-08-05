@@ -46,7 +46,7 @@ export async function syncFlatTree({
 		return (
 			old &&
 			(old.order !== n.order ||
-				old.parentId !== n.parentId ||
+				n.movedParentId !== undefined ||
 				old.contentId !== n.contentId)
 		);
 	});
@@ -95,29 +95,33 @@ export async function syncFlatTree({
 		clientIdToDbId[node.clientId] = id;
 	}
 
-	// 2nd pass: adjust parentId for existing nodes
-	for (const node of incoming) {
-		if (!node.id) continue; // skip brand new nodes
+	// NOT SURE THIS IS NECESSARY NOW
+	// // 2nd pass: adjust parentId for existing nodes
+	// for (const node of incoming) {
+	// 	if (!node.id) continue; // skip brand new nodes
 
-		const old = existingMap.get(node.id);
+	// 	const old = existingMap.get(node.id);
 
-		// Case 1: parent is a newly created node
-		if (node.clientParentId) {
-			const newParentId = clientIdToDbId[node.clientParentId];
-			if (newParentId && old && old.parentId !== newParentId) {
-				toUpdate.push({ ...node, parentId: newParentId });
-			}
-		}
+	// 	// Case 1: parent is a newly created node
+	// 	if (node.clientParentId) {
+	// 		const newParentId = clientIdToDbId[node.clientParentId];
+	// 		if (newParentId && old && old.parentId !== newParentId) {
+	// 			toUpdate.push({ ...node, parentId: newParentId });
+	// 		}
+	// 	}
 
-		// Case 2: moved to root
-		if (!node.clientParentId && old && old.parentId !== null) {
-			toUpdate.push({ ...node, parentId: null });
-		}
-	}
+	// 	// Case 2: moved to root
+	// 	// trying using root as the changer
+	// 	if (node.clientParentId === null && old && old.parentId !== null) {
+	// 		toUpdate.push({ ...node, parentId: null });
+	// 	}
+	// }
 
 	for (const node of toUpdate) {
-		const parentId = node.clientParentId
-			? clientIdToDbId[node.clientParentId]
+		const parentId = node.movedParentId
+			? clientIdToDbId[node.movedParentId]
+			: node.movedParentId === null
+			? null
 			: node.parentId;
 		await updateNode({ ...node, courseId, id: node.id!, parentId });
 	}
