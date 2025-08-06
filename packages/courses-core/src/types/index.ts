@@ -5,7 +5,6 @@ import {
 	CourseTreeDTO,
 	EditCourseTreeDTO,
 	CourseNodeDTO,
-	CreateCourseNodeDTO,
 	CreateCourseDTO,
 	ContentType,
 	ContentItemDTO,
@@ -30,7 +29,6 @@ import {
 
 export {
 	CourseNodeDTO,
-	CreateCourseNodeDTO,
 	CourseDTO,
 	CreateCourseDTO,
 	ContentType,

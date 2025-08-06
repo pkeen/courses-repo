@@ -481,7 +481,7 @@ export const upsertFlatNode = upsertBaseNode.extend({
 export type UpsertFlatNode = z.infer<typeof upsertFlatNode>;
 
 export type UpsertNestedNode = UpsertBaseNode & {
-	children: UpsertNestedNode[];
+children: UpsertNestedNode[];
 };
 
 export const upsertNestedNode: z.ZodType<

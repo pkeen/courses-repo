@@ -105,6 +105,7 @@ describe("syncFlatTree test:", () => {
 				contentId: 2,
 				clientId: "child3",
 				clientParentId: "parent",
+				movedParentId: "parent",
 			},
 			{
 				clientId: "grandchild",
@@ -122,7 +123,11 @@ describe("syncFlatTree test:", () => {
 			insertOrder.push(`${node.contentId}`);
 			return nextId++;
 		});
-		const updateNode = vi.fn(async () => {});
+		// Monitor updated notes
+		const updated: CourseNodeDTO[] = [];
+		const updateNode = vi.fn(async (input: CourseNodeDTO) => {
+			updated.push(input);
+		});
 		const deleteNodes = vi.fn(async () => {});
 
 		await syncFlatTree({
@@ -144,5 +149,10 @@ describe("syncFlatTree test:", () => {
 		expect(insertNode).toHaveBeenCalledTimes(4);
 		expect(updateNode).toHaveBeenCalledTimes(1);
 		expect(deleteNodes).toHaveBeenCalledTimes(1);
+
+		console.log("UPDATED", updated);
+		debugger;
+
+		expect(updated[0].parentId).toBe(3);
 	});
 });

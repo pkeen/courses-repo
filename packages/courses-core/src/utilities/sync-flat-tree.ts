@@ -1,23 +1,5 @@
 import { CourseNodeCreateDTO, CourseNodeDTO, UpsertFlatNode } from "validators";
 
-// interface FlatNodesHelperReturnType {
-//     toCreate
-// }
-
-// export const syncFlatCourseNodesHelper = (existingNodes: CourseNodeDTO) => {
-
-// }
-
-// Full refactored sync function for client-linked flat tree
-
-// type UpsertFlatNode = {
-//   id?: number;
-//   clientId: string;
-//   clientParentId?: string | null;
-//   contentId: number;
-//   order: number;
-//   parentId?: number | null;
-// };
 export async function syncFlatTree({
 	courseId,
 	incoming,

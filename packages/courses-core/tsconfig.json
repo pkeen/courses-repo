@@ -13,7 +13,9 @@
 		"esModuleInterop": true,
 		"baseUrl": "./src",
 		"skipLibCheck": true,
-		"forceConsistentCasingInFileNames": true
+		"forceConsistentCasingInFileNames": true,
+		"sourceMap": true,
+		"inlineSources": true
 	},
 	"include": ["src/**/*", "src/__tests__"],
 	"exclude": ["node_modules", "dist", "**/node_modules/*"]
