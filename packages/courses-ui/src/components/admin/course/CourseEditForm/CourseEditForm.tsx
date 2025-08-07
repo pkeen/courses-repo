@@ -32,6 +32,7 @@ import {
 	UpsertNestedNode,
 } from "@pete_keen/courses-core/validators";
 import { Textarea } from "components/ui/textarea";
+import { ensureDisplayNodes } from "./utilities";
 // import { courseDisplayToUi } from "./course-display-to-ui";
 
 export function CourseEditForm({
@@ -202,20 +203,25 @@ export function CourseEditForm({
 								}}
 							/>
 						</div>
-						<Controller
-							control={form.control}
-							name="nodes"
-							render={({ field }) => (
-								<SortableTree
-									items={field.value ?? []}
-									onChange={field.onChange}
-									indicator={true}
-									removable={true}
-									collapsible={true}
-									indentationWidth={50}
-								/>
-							)}
-						/>
+						<div>
+							<Controller
+								control={form.control}
+								name="nodes"
+								render={({ field }) => (
+									<SortableTree
+										items={
+											ensureDisplayNodes(field.value) ??
+											[]
+										}
+										onChange={field.onChange}
+										indicator={true}
+										removable={true}
+										collapsible={true}
+										indentationWidth={50}
+									/>
+								)}
+							/>
+						</div>
 						{/* <NestedSortableSlotList fields={fields} move={move} /> */}
 					</Card>
 
