@@ -41,7 +41,7 @@ export const BaseContentFields = () => {
 };
 
 export const ContentNewForm = ({ createContent }: BaseFormProps) => {
-	const [type, setType] = useState("lesson");
+	const [type, setType] = useState<ContentType>("lesson");
 
 	const SpecificForm = formComponentMap[type];
 	return (
@@ -53,7 +53,11 @@ export const ContentNewForm = ({ createContent }: BaseFormProps) => {
 
 			{/* Type-Specific Form */}
 			{SpecificForm && (
-				<SpecificForm createContent={() => console.log("ok")} />
+				<SpecificForm
+					createContent={async () =>
+						Promise.resolve(console.log("ok"))
+					}
+				/>
 			)}
 		</div>
 	);

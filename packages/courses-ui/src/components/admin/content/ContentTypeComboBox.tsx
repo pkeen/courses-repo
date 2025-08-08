@@ -15,7 +15,9 @@ import {
 } from "../../ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover";
 import {
+	ContentType,
 	contentTypeLabels,
+	contentType,
 } from "@pete_keen/courses-core/validators";
 
 const contentTypes = Object.entries(contentTypeLabels).map(
@@ -26,8 +28,8 @@ const contentTypes = Object.entries(contentTypeLabels).map(
 );
 
 interface ContentTypeComboBoxProps {
-	value: string;
-	setValue: (value: string) => void;
+	value: ContentType;
+	setValue: (value: ContentType) => void;
 }
 
 export function ContentTypeComboBox({
@@ -64,11 +66,15 @@ export function ContentTypeComboBox({
 									key={provider.value}
 									value={provider.value}
 									onSelect={(currentValue) => {
-										setValue(
-											currentValue === value
-												? ""
-												: currentValue
-										);
+										if (
+											contentType.options.includes(
+												currentValue as ContentType
+											)
+										) {
+											setValue(
+												currentValue as ContentType
+											);
+										}
 										setOpen(false);
 									}}
 								>
