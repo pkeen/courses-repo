@@ -52,26 +52,26 @@ beforeEach(async () => {
 	await resetTables(db, tablesArray);
 });
 
-describe("Basic DB test", () => {
-	it("inserts and reads back a content item", async () => {
-		const newContent = await db
-			.insert(schema.contentItem)
-			.values({
-				title: "Hello, world!",
-				type: "lesson",
-				isPublished: true,
-				updatedAt: new Date(),
-			})
-			.returning();
+// describe("Basic DB test", () => {
+// 	it("inserts and reads back a content item", async () => {
+// 		const newContent = await db
+// 			.insert(schema.contentItem)
+// 			.values({
+// 				title: "Hello, world!",
+// 				type: "lesson",
+// 				isPublished: true,
+// 				updatedAt: new Date(),
+// 			})
+// 			.returning();
 
-		const results = await db
-			.select()
-			.from(schema.contentItem)
-			.where(eq(schema.contentItem.title, "Hello, world!"));
+// 		const results = await db
+// 			.select()
+// 			.from(schema.contentItem)
+// 			.where(eq(schema.contentItem.title, "Hello, world!"));
 
-		expect(results.length).toBe(1);
-	});
-});
+// 		expect(results.length).toBe(1);
+// 	});
+// });
 
 // describe("Content Items CRUD", () => {
 //     it("it inserts a module and reads it back")

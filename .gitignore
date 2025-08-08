@@ -49,3 +49,6 @@ out/
 
 # React Router Types
 .react-router/
+
+# pnpm cache
+.pnpm/
