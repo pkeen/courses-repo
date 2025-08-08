@@ -1,7 +1,7 @@
-import { NewModuleForm } from "@/lib/components/course-builder/modules/new-module-form";
 import { courses } from "@/courses";
+import { ContentNewForm } from "@pete_keen/courses-ui";
 
-export default async function NewModulePage() {
-	const existingLessons = await courses.lesson.list();
-	return <NewModuleForm existingLessons={existingLessons} />;
+export default async function NewContentPage() {
+	// const existingLessons = await courses.lesson.list();
+	return <ContentNewForm />;
 }

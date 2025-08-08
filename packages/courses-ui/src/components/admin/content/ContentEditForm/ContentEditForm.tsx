@@ -49,7 +49,7 @@ export const ContentEditForm = ({
 			);
 		}
 		case "quiz": {
-			return <div>Quiz</div>;
+			return <div>Quiz - Not supported yet</div>;
 		}
 		case "video": {
 			return (

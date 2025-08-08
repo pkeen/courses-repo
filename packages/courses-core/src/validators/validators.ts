@@ -8,6 +8,13 @@ export const contentType = z.enum([
 	"video",
 ]);
 export type ContentType = z.infer<typeof contentType>;
+export const contentTypeLabels: Record<ContentType, string> = {
+	lesson: "Lesson",
+	module: "Module",
+	video: "Video",
+	file: "File",
+	quiz: "Quiz",
+};
 
 /*
  ****************** Course ******************
@@ -481,7 +488,7 @@ export const upsertFlatNode = upsertBaseNode.extend({
 export type UpsertFlatNode = z.infer<typeof upsertFlatNode>;
 
 export type UpsertNestedNode = UpsertBaseNode & {
-children: UpsertNestedNode[];
+	children: UpsertNestedNode[];
 };
 
 export const upsertNestedNode: z.ZodType<
