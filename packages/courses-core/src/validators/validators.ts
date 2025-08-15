@@ -175,8 +175,8 @@ export const lessonDetail = z.object({
 	videoContentId: z.number().optional().nullable(),
 	excerpt: z.string(), // short summary for previews
 	bodyContent: z.string(), // raw markdown or HTML
-	createdAt: z.date().optional(),
-	updatedAt: z.date().optional(),
+	// createdAt: z.date().optional(),
+	// updatedAt: z.date().optional(),
 });
 export type LessonDetail = z.infer<typeof lessonDetail>;
 const createLessonDetail = lessonDetail.omit({ id: true, contentId: true });
@@ -217,7 +217,7 @@ export const fileDetailDTO = z.object({
 	contentId: z.number(),
 	fileName: z.string(),
 	fileUrl: z.string(),
-	mimeType: z.string(), // e.g., "application/pdf"
+	mimeType: z.string(), // e.g., "application/pdf" // this should probably be a type?
 	size: z.number(),
 });
 export type FileDetailDTO = z.infer<typeof fileDetailDTO>;
