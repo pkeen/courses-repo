@@ -10,6 +10,8 @@ export default defineConfig({
 		"src/index.ts",
 		"src/types/index.ts",
 		"src/validators/index.ts",
+		"src/entities/index.ts",
+		"src/application/use-cases/index.ts",
 	],
 	output: {
 		dir: "dist",

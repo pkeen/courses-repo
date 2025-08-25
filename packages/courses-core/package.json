@@ -20,6 +20,16 @@
 			"import": "./dist/validators/index.mjs",
 			"default": "./dist/validators/index.mjs",
 			"types": "./dist/validators/index.d.ts"
+		},
+		"./entities": {
+			"import": "./dist/entities/index.mjs",
+			"default": "./dist/entities/index.mjs",
+			"types": "./dist/entities/index.d.ts"
+		},
+		"./ports": {
+			"import": "./dist/application/ports/index.mjs",
+			"default": "./dist/application/ports/index.mjs",
+			"types": "./dist/application/ports/index.d.ts"
 		}
 	},
 	"scripts": {

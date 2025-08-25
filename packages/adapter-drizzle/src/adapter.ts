@@ -1,4 +1,8 @@
-import { ContentItemCRUD, CourseCRUD, DBAdapter } from "@pete_keen/courses-core/types";
+import {
+	ContentItemRepo,
+	CourseRepo,
+	DBAdapter,
+} from "@pete_keen/courses-core/ports";
 import {
 	createSchema,
 	DrizzleDbWithSchema,
@@ -28,7 +32,6 @@ import {
 	UpsertFlatNode,
 } from "@pete_keen/courses-core/validators";
 import { eq, inArray } from "drizzle-orm";
-import { assignClientIds, flattenCourseNodes } from "./utils";
 import { buildTree, flattenTree } from "@pete_keen/courses-core";
 import { syncFlatTree } from "@pete_keen/courses-core";
 
@@ -40,8 +43,8 @@ const createCRUD = (
 	db: DrizzleDatabase,
 	schema: DefaultSchema
 ): {
-	course: CourseCRUD;
-	content: ContentItemCRUD;
+	course: CourseRepo;
+	content: ContentItemRepo;
 } => {
 	const createCourseRepo = (db: DrizzleDatabase) => {
 		// function assignClientIds(

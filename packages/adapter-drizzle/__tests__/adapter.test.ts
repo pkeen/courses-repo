@@ -18,19 +18,13 @@ import {
 	fullContentItem,
 	FullContentItem,
 	courseDTO,
-	courseTreeDTO,
-	CourseTreeDTO,
-	CreateCourseTreeDTO,
-	createCourseTreeDTO,
-	editCourseTreeDTO,
-	EditCourseTreeDTO,
 	CourseDTO,
 	CourseNodeCreateDTO,
 	CourseCreateInputFlat,
 	CourseCreateNestedInput,
 	CourseUpdateInputFlat,
 	UpsertFlatNode,
-} from "@pete_keen/courses-core/validators";
+} from "@pete_keen/courses-core/entities";
 import { afterEach } from "vitest";
 import { id } from "zod/v4/locales";
 
