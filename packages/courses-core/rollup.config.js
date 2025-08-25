@@ -8,7 +8,6 @@ export default defineConfig({
 	// input: ["src/index.ts", "src/client/index.ts"],
 	input: [
 		"src/index.ts",
-		"src/db-adapters/index.ts",
 		"src/types/index.ts",
 		"src/validators/index.ts",
 	],

@@ -112,6 +112,14 @@ export interface ContentUsage {
 	courseNodes: CourseNodeDTO[];
 }
 
+export interface DBAdapter {
+	course: CourseCRUD;
+	content: ContentItemCRUD;
+	// module: ModuleCRUD;
+	// lesson: LessonCRUD;
+	// video: VideoCRUD;
+}
+
 // export {
 // 	Lesson,
 // 	UiModule,

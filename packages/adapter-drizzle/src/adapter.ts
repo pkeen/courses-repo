@@ -1,4 +1,4 @@
-import { ContentItemCRUD, CourseCRUD } from "@pete_keen/courses-core/types";
+import { ContentItemCRUD, CourseCRUD, DBAdapter } from "@pete_keen/courses-core/types";
 import {
 	createSchema,
 	DrizzleDbWithSchema,
@@ -860,11 +860,6 @@ export const DrizzlePGAdapter = (
 		...createCRUD(db, schema),
 	};
 };
-
-export interface DBAdapter {
-	course: CourseCRUD;
-	content: ContentItemCRUD;
-}
 
 export const createCoursesDBAdapter = (
 	db: DrizzleDatabase,
