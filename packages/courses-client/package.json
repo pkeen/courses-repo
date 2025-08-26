@@ -1,0 +1,25 @@
+{
+	"name": "@pete_keen/courses-client",
+	"version": "0.0.1",
+	"main": "dist/index.mjs",
+	"browser": "dist/client/index.mjs",
+	"types": "dist/index.d.ts",
+	"type": "module",
+	"exports": {
+		".": {
+			"import": "./dist/index.mjs",
+			"default": "./dist/index.mjs",
+			"types": "./dist/index.d.ts",
+			"style": "./dist/index.css"
+		}
+	},
+	"scripts": {
+		"build": "rollup -c",
+		"dev": "rollup -c -w",
+		"test": "vitest run",
+		"types": "tsc --noEmit"
+	},
+	"dependencies": {},
+	"peerDependencies": {},
+	"devDependencies": {}
+}

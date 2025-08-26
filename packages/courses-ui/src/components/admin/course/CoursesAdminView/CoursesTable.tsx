@@ -19,7 +19,7 @@ import {
 } from "../../../ui/dropdown-menu";
 import Link from "next/link";
 import { useState } from "react";
-import { CourseDTO } from "@pete_keen/courses-core/types";
+import { CourseDTO } from "@pete_keen/courses-core/entities";
 import { ConfirmDeleteCourseDialog } from "../ConfirmDeleteCourseDialog";
 // import { deleteCourse } from "@/lib/actions/course/deleteCourse";
 import { toast } from "sonner";
@@ -40,7 +40,7 @@ export function CoursesTable({
 	// console.log("courseToDelete", courseToDelete);
 
 	const filteredCourses = allCourses.filter((course) =>
-		`${course.title} ${course.description}`
+		`${course.title} ${course.excerpt}`
 			.toLowerCase()
 			.includes(search.toLowerCase())
 	);
