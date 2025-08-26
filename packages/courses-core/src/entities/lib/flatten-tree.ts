@@ -1,4 +1,4 @@
-import { UpsertBaseNode, UpsertNestedNode, UpsertFlatNode } from "validators";
+import { UpsertNestedNode, UpsertFlatNode } from "validators";
 
 export function flattenTree(input: UpsertNestedNode[]): UpsertFlatNode[] {
 	const flattenedNodes: UpsertFlatNode[] = [];

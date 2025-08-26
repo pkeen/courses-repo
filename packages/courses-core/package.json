@@ -11,11 +11,6 @@
 			"default": "./dist/index.mjs",
 			"types": "./dist/index.d.ts"
 		},
-		"./types": {
-			"import": "./dist/types/index.mjs",
-			"default": "./dist/types/index.mjs",
-			"types": "./dist/types/index.d.ts"
-		},
 		"./validators": {
 			"import": "./dist/validators/index.mjs",
 			"default": "./dist/validators/index.mjs",
@@ -43,7 +38,6 @@
 		"zod": "^3.0.0"
 	},
 	"peerDependencies": {
-		"drizzle-orm": "^0.36.3",
 		"typescript": "^5.0.0"
 	},
 	"devDependencies": {

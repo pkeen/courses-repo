@@ -1,4 +1,4 @@
-import { buildTree } from "../../utilities/build-tree";
+import { buildTree } from "../../entities/lib/build-tree";
 import { BackendNode, courseTreeItem } from "../../validators";
 import { describe, it, expect, test } from "vitest";
 import z from "zod";

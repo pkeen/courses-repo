@@ -32,7 +32,7 @@ import {
 	UpsertFlatNode,
 } from "@pete_keen/courses-core/validators";
 import { eq, inArray } from "drizzle-orm";
-import { buildTree, flattenTree } from "@pete_keen/courses-core";
+import { buildTree, flattenTree } from "@pete_keen/courses-core/entities";
 import { syncFlatTree } from "@pete_keen/courses-core";
 
 // const defaultSchema = createSchema();

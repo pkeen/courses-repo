@@ -1,4 +1,4 @@
-import { flattenTree } from "../../utilities";
+import { flattenTree } from "../../entities/lib/flatten-tree";
 import {
 	UpsertBaseNode,
 	UpsertNestedNode,

@@ -1,4 +1,4 @@
-import { CourseTreeItem, BackendNode, NestedNode } from "validators";
+import { BackendNode, NestedNode } from "validators";
 
 export function buildTree(nodes: BackendNode[]): NestedNode[] {
 	// STEP 1 – create lookup with empty children

@@ -1,3 +1,9 @@
+/*
+ * Deprecating this for the more pure buildSyncPlan etc
+TODO
+*/
+
+
 import { CourseNodeCreateDTO, CourseNodeDTO, UpsertFlatNode } from "validators";
 
 export async function syncFlatTree({

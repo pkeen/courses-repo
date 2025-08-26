@@ -1,3 +1,10 @@
+/*
+ * This is the application layer\
+    These shapes do not need to match the repo port shapes exactly. 
+    Some functions can be changed here and application logic applied, e.g. Authorization
+    All logic for “what actions are allowed and in what order” lives here.
+*/
+
 import { CourseRepo, ContentItemRepo, DBAdapter } from "../ports";
 
 export interface CourseManager {
@@ -17,6 +24,8 @@ export interface CourseManager {
 export const CourseManager = (dbAdapter: DBAdapter): CourseManager => {
 	return {
 		course: dbAdapter.course,
-		content: dbAdapter.content,
+		content: dbAdapter.content, // it may be here that in file content we actually call the fileStorage API before passing it on as contentItem to repo
+		// Similarly courses will need to store files for images
+		// And for video content thumbnails or saving videos
 	};
 };

@@ -1,3 +1,5 @@
+import { NetworkError, normalizeHttpError } from "./errors";
+
 // src/base/http.ts
 export type HttpOptions = {
 	baseUrl: string;
@@ -55,19 +57,4 @@ export function createHttp({
 			request<T>(p, { method: "PUT", body: JSON.stringify(body) }),
 		del: <T>(p: string) => request<T>(p, { method: "DELETE" }),
 	};
-}
-
-// src/base/errors.ts
-export class NetworkError extends Error {
-	constructor(msg: string, public cause?: unknown) {
-		super(msg);
-	}
-}
-export class HttpError extends Error {
-	constructor(public status: number, public body: string) {
-		super(`HTTP ${status}`);
-	}
-}
-export function normalizeHttpError(status: number, body: string) {
-	return new HttpError(status, body);
 }
