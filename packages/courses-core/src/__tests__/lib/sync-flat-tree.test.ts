@@ -1,5 +1,6 @@
-import { CourseNodeDTO, UpsertFlatNode } from "validators";
-import { syncFlatTree } from "../../utilities/sync-flat-tree";
+import { CourseNodeDTO, UpsertFlatNode } from "../../entities/course";
+// import { syncFlatTree } from "../../utilities/sync-flat-tree";
+import { syncFlatTree } from "../../entities/lib/sync-flat-tree";
 import { describe, expect, it, vi } from "vitest";
 
 describe("syncFlatTree test:", () => {
@@ -150,7 +151,7 @@ describe("syncFlatTree test:", () => {
 		expect(updateNode).toHaveBeenCalledTimes(1);
 		expect(deleteNodes).toHaveBeenCalledTimes(1);
 
-		console.log("UPDATED", updated);
+		// console.log("UPDATED", updated);
 		debugger;
 
 		expect(updated[0].parentId).toBe(3);
